@@ -12,7 +12,8 @@ import Database.Beam
   , Generic
   , PrimaryKey
   , primaryKey
-  , Table)
+  , Table
+  )
 
 data UserT f
   = User
