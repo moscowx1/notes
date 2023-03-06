@@ -1,18 +1,15 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Migrations.V0001 (initialSetupStep, NoteDb) where
 
 import Data.Int (Int32)
 import Data.Text (Text)
-import Data.Time (UTCTime)
-
 import qualified Database.Beam as B
-import Database.Beam.Backend ( BeamSqlBackend, timestampType)
 import qualified Database.Beam.Migrate as BM
-import Database.Beam.Postgres (Postgres (Postgres))
-
+import Database.Beam.Postgres (Postgres)
 import Database.Beam.Migrate (CheckedDatabaseSettings)
 
 data UserT f
@@ -41,8 +38,8 @@ instance B.Table UserT where
 data NoteDb f
   = NoteDb
   { dbUsers :: f (B.TableEntity UserT)
-  , dbNotes :: f (B.TableEntity NoteT)}
-
+  , dbNotes :: f (B.TableEntity NoteT)
+  } deriving (B.Database be, B.Generic)
 
 initialSetup :: BM.Migration Postgres
   (BM.CheckedDatabaseSettings Postgres NoteDb)
