@@ -1,22 +1,24 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE OverloadedStrings #-}
 
-module Migrations.V0001 (initialSetupStep, NoteDb) where
+module Database.Migrations.V0001
+  ( NoteT(..)
+  , UserT(..)
+  , NoteDb(..)
+  , B.PrimaryKey(NoteId, UserId)
+  , initialSetupStep
+  ) 
+    where
 
 import Data.Int (Int32)
 import Data.Text (Text)
+import Database.Beam (int, nationalVarchar)
 import qualified Database.Beam as B
 import qualified Database.Beam.Migrate as BM
 import Database.Beam.Postgres (Postgres)
 import Database.Beam.Migrate (CheckedDatabaseSettings)
-
-data UserT f
-  = User
-    { _userId :: B.Columnar f Int32
-    , _userNick :: B.Columnar f Text
-    } deriving (B.Beamable, B.Generic)
 
 data NoteT f
   = Note
@@ -30,9 +32,15 @@ instance B.Table NoteT where
     deriving (B.Beamable, B.Generic)
   primaryKey = NoteId . _noteId
 
+data UserT f
+  = User
+    { _userId :: B.Columnar f Int32
+    , _userNick :: B.Columnar f Text
+    } deriving (B.Generic, B.Beamable)
+
 instance B.Table UserT where
   data PrimaryKey UserT f = UserId (B.Columnar f Int32)
-    deriving (B.Beamable, B.Generic)
+    deriving (B.Generic, B.Beamable)
   primaryKey = UserId . _userId
 
 data NoteDb f
@@ -46,17 +54,17 @@ initialSetup :: BM.Migration Postgres
 initialSetup = NoteDb
   <$> (BM.createTable "users" $ User
         { _userId = BM.field "id"
-            B.int BM.notNull BM.unique
+            int BM.notNull BM.unique
         , _userNick = BM.field "nick"
-            (B.nationalVarchar (Just 20)) BM.notNull BM.unique
+            (nationalVarchar (Just 20)) BM.notNull BM.unique
         })
   <*> (BM.createTable "notes" $ Note
         { _noteId = BM.field "id"
-            B.int BM.notNull BM.unique
+            int BM.notNull BM.unique
         , _noteContent = BM.field "content"
-            (B.nationalVarchar (Just 5000)) BM.notNull
+            (nationalVarchar (Just 5000)) BM.notNull
         , _noteAuthorId = UserId $
-            BM.field "author_id" B.int BM.notNull
+            BM.field "author_id" int BM.notNull
         })
 
 initialSetupStep :: BM.MigrationSteps Postgres

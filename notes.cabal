@@ -14,8 +14,15 @@ common shared-prop
 
 executable notes
   import: shared-prop
-  main-is:          Main.hs
-  hs-source-dirs:   app
+  main-is: Main.hs
+  hs-source-dirs: app
+  build-depends:
+        lib
+
+executable migration
+  import: shared-prop
+  main-is: Main.hs
+  hs-source-dirs: migration
   build-depends:
         lib
       , beam-postgres
@@ -24,8 +31,11 @@ library lib
   import: shared-prop
   hs-source-dirs: lib
   exposed-modules: 
-        Migrations.Migration
-        Migrations.V0001
+        Database.Migration
+        Database.Scheme
+
+  other-modules:
+        Database.Migrations.V0001
 
   build-depends:
         bytestring
