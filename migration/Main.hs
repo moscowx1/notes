@@ -1,11 +1,11 @@
 module Main where
 
 import Config (readConnectInfo)
-import Data.Ini (readIniFile)
 import Data.Functor ((<&>))
-import Utils (throwLeft)
+import Data.Ini (readIniFile)
 import Database.Beam.Postgres (connect)
 import Database.Migration (migrateDb)
+import Utils (throwLeft)
 
 main :: IO ()
 main = do

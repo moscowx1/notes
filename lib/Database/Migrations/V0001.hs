@@ -14,11 +14,9 @@ module Database.Migrations.V0001
 
 import Data.Int (Int32)
 import Data.Text (Text)
-import Database.Beam (int, nationalVarchar)
 import qualified Database.Beam as B
 import qualified Database.Beam.Migrate as BM
 import Database.Beam.Postgres (Postgres)
-import Database.Beam.Migrate (CheckedDatabaseSettings)
 
 data NoteT f
   = Note
@@ -54,22 +52,22 @@ initialSetup :: BM.Migration Postgres
 initialSetup = NoteDb
   <$> (BM.createTable "users" $ User
         { _userId = BM.field "id"
-            int BM.notNull BM.unique
+            B.int BM.notNull BM.unique
         , _userNick = BM.field "nick"
-            (nationalVarchar (Just 20)) BM.notNull BM.unique
+            (B.nationalVarchar (Just 20)) BM.notNull BM.unique
         })
   <*> (BM.createTable "notes" $ Note
         { _noteId = BM.field "id"
-            int BM.notNull BM.unique
+            B.int BM.notNull BM.unique
         , _noteContent = BM.field "content"
-            (nationalVarchar (Just 5000)) BM.notNull
+            (B.nationalVarchar (Just 5000)) BM.notNull
         , _noteAuthorId = UserId $
-            BM.field "author_id" int BM.notNull
+            BM.field "author_id" B.int BM.notNull
         })
 
 initialSetupStep :: BM.MigrationSteps Postgres
   ()
-  (CheckedDatabaseSettings Postgres NoteDb)
+  (BM.CheckedDatabaseSettings Postgres NoteDb)
 initialSetupStep = BM.migrationStep
   "initial_setup"
   (const initialSetup)
