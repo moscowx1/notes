@@ -11,13 +11,10 @@ module Database.Scheme
   , Note
   , NoteId
   , NoteDb
-  , getConnection)
+  )
     where
 
 import Data.Functor.Identity (Identity)
-import Database.Beam.Migrate (CheckedDatabaseSettings)
-import Database.Beam.Postgres (Connection, Postgres)
-import Database.Migration (migrateDb)
 import Database.Migrations.V0001
   ( NoteT(..)
   , UserT(..)
@@ -36,8 +33,4 @@ deriving instance Show Note
 
 type NoteId = PrimaryKey NoteT Identity
 deriving instance Show NoteId
-
-getConnection :: Connection
-  -> IO (Maybe (CheckedDatabaseSettings Postgres NoteDb))
-getConnection = migrateDb
 

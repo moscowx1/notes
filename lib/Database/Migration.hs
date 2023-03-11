@@ -26,4 +26,3 @@ migrateDb conn = runBeamPostgresDebug putStrLn conn $
     allowDestructive
     migrationBackend
     fullMigration
-
