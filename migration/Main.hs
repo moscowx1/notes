@@ -18,4 +18,3 @@ main = do
   _ <- migrateDb con
   print "database migrated"
 
-

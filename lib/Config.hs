@@ -27,3 +27,4 @@ readConnectInfo ini = do
     }
   where
     lookup' key = unpack <$> lookupValue "database" key ini
+

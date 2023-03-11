@@ -9,8 +9,7 @@ module Database.Migrations.V0001
   , NoteDb(..)
   , B.PrimaryKey(NoteId, UserId)
   , initialSetupStep
-  ) 
-    where
+  ) where
 
 import Data.Int (Int32)
 import Data.Text (Text)
@@ -71,3 +70,4 @@ initialSetupStep :: BM.MigrationSteps Postgres
 initialSetupStep = BM.migrationStep
   "initial_setup"
   (const initialSetup)
+

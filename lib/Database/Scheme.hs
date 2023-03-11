@@ -11,15 +11,15 @@ module Database.Scheme
   , Note
   , NoteId
   , NoteDb
-  )
-    where
+  ) where
 
 import Data.Functor.Identity (Identity)
 import Database.Migrations.V0001
   ( NoteT(..)
   , UserT(..)
   , PrimaryKey(UserId, NoteId)
-  , NoteDb)
+  , NoteDb
+  )
 
 type User = UserT Identity
 deriving instance Show User
