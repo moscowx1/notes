@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Main where
 
 import Config (Config(..))
 import Data.Aeson (decode, encode)
-import Data.Text (Text, pack)
 import Database.Beam.Postgres (ConnectInfo(..))
 import Test.Tasty (TestTree, testGroup, defaultMain)
 import Test.Tasty.QuickCheck (testProperty, Arbitrary (arbitrary))
