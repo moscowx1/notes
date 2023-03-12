@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Config (Config(..)) where
 
 import Data.Aeson ((.=), (.:), toJSON)
 import qualified Data.Aeson as A
-import Data.Text (unpack)
 import Database.Beam.Postgres (ConnectInfo (..))
-import Text.Read (readMaybe)
 
 newtype Config = Config { _dbConnect :: ConnectInfo }
   deriving (Show, Eq)
@@ -43,5 +43,4 @@ instance A.FromJSON ConnectInfo where
       , connectPort = port
       , connectUser = user
       }
-
 
