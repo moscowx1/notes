@@ -1,30 +1,47 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
-module Config (readConnectInfo) where
+module Config (Config(..)) where
 
-import Data.Ini (lookupValue, Ini)
+import Data.Aeson ((.=), (.:), toJSON)
+import qualified Data.Aeson as A
 import Data.Text (unpack)
 import Database.Beam.Postgres (ConnectInfo (..))
 import Text.Read (readMaybe)
 
-type ParseErrMessage = String
-read' :: (Read a) => ParseErrMessage -> String -> Either String a
-read' err value = maybe (Left err) Right (readMaybe value)
+newtype Config = Config { _dbConnect :: ConnectInfo }
+  deriving (Show, Eq)
 
-readConnectInfo :: Ini -> Either String ConnectInfo
-readConnectInfo ini = do
-  db <- lookup' "database"
-  port <- lookup' "port" >>= read' "error parse port"
-  pwd <- lookup' "password"
-  host <- lookup' "host"
-  user <- lookup' "user"
-  pure $ ConnectInfo 
-    { connectDatabase = db
-    , connectHost = host
-    , connectPassword =pwd
-    , connectPort = port
-    , connectUser =user 
-    }
-  where
-    lookup' key = unpack <$> lookupValue "database" key ini
+instance A.FromJSON Config where
+  parseJSON = A.withObject "Config" $ \o -> do
+    conInfo <- o .: "dbConnect"
+    pure $ Config conInfo
+
+instance A.ToJSON Config where
+  toJSON Config {..}= A.object [ "dbConnect" .= _dbConnect ]
+
+instance A.ToJSON ConnectInfo where
+  toJSON ConnectInfo {..} = A.object
+    [ "host" .= toJSON connectHost
+    , "port" .= toJSON connectPort
+    , "user" .= toJSON connectUser
+    , "password" .= toJSON connectPassword
+    , "database" .= toJSON connectDatabase
+    ]
+
+instance A.FromJSON ConnectInfo where
+  parseJSON = A.withObject "ConnectInfo" $ \o -> do
+    host <- o .: "host"
+    database <- o .: "database"
+    pwd <- o .: "password"
+    port <- o .: "port"
+    user <- o .: "user"
+    pure $ ConnectInfo 
+      { connectDatabase = database
+      , connectHost = host
+      , connectPassword = pwd
+      , connectPort = port
+      , connectUser = user
+      }
+
 

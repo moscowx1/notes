@@ -25,7 +25,7 @@ executable migration
   build-depends:
         lib
       , beam-postgres
-      , ini
+      , aeson
 
 library lib
   import: shared-prop
@@ -46,7 +46,7 @@ library lib
       , beam-migrate
       , text
       , time
-      , ini
+      , aeson
 
 test-suite test
   import: shared-prop
@@ -57,3 +57,8 @@ test-suite test
   build-depends:
         tasty
       , tasty-hunit
+      , tasty-quickcheck
+      , beam-postgres
+      , text
+      , lib
+      , aeson

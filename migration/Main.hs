@@ -1,8 +1,10 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Main where
 
-import Config (readConnectInfo)
+import Config (Config(..))
+import Data.Aeson(eitherDecodeFileStrict)
 import Data.Functor ((<&>))
-import Data.Ini (readIniFile)
 import Database.Beam.Postgres (connect)
 import Database.Migration (migrateDb)
 import Utils (throwLeft)
@@ -10,10 +12,9 @@ import Utils (throwLeft)
 main :: IO ()
 main = do
   print "started migration"
-  ini <- readIniFile "env.ini" <&> throwLeft
-  let conInfo = throwLeft $ readConnectInfo ini
+  Config { _dbConnect }<- eitherDecodeFileStrict "config.json" <&> throwLeft
   print "config read"
-  con <- connect conInfo
+  con <- connect _dbConnect
   print "connected to database"
   _ <- migrateDb con
   print "database migrated"
