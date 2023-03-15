@@ -28,20 +28,23 @@ executable migration
 library lib
   import: shared-prop
   hs-source-dirs: lib
-  exposed-modules:
+  other-modules:
     Config
+    Lib
     Utils
 
   build-depends:
       bytestring
     , persistent
     , persistent-postgresql
+    , postgresql-simple
     , esqueleto
     , text
     , time
     , aeson
     , mtl
     , cryptonite
+    , monad-logger
 
 test-suite test
   import: shared-prop
@@ -56,3 +59,4 @@ test-suite test
     , text
     , lib
     , aeson
+    , postgresql-simple

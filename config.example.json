@@ -1,9 +1,4 @@
 {
-  "dbConnect": {
-    "host": "localhost",
-    "port": 1,
-    "user": "postgres",
-    "password": "",
-    "database": "db"
-  }
+  "connectionString": ""
+  "poolConnections": 0
 }
