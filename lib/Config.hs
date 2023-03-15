@@ -3,11 +3,19 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Config (Config(..)) where
+module Config (Config(..), ConnectInfo(..)) where
 
 import Data.Aeson ((.=), (.:), toJSON)
 import qualified Data.Aeson as A
-import Database.Beam.Postgres (ConnectInfo (..))
+import Data.Word (Word16)
+
+data ConnectInfo = ConnectInfo
+  { connectHost :: String
+  , connectPort :: Word16
+  , connectUser :: String
+  , connectPassword :: String
+  , connectDatabase :: String
+  } deriving (Show, Eq)
 
 newtype Config = Config { _dbConnect :: ConnectInfo }
   deriving (Show, Eq)

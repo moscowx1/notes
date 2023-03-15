@@ -4,9 +4,8 @@
 
 module Main where
 
-import Config (Config(..))
+import Config (Config(..), ConnectInfo(..))
 import Data.Aeson (decode, encode)
-import Database.Beam.Postgres (ConnectInfo(..))
 import Test.Tasty (TestTree, testGroup, defaultMain)
 import Test.Tasty.QuickCheck (testProperty, Arbitrary (arbitrary))
 

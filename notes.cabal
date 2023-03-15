@@ -8,45 +8,40 @@ common shared-prop
   default-language: Haskell2010
   build-depends: base ^>=4.16.4
   ghc-options:
-      -Wall
-      -Werror
+    -Wall
+    -Werror
 
 executable notes
   import: shared-prop
   main-is: Main.hs
   hs-source-dirs: app
-  build-depends:
-        lib
+  build-depends: lib
 
 executable migration
   import: shared-prop
   main-is: Main.hs
   hs-source-dirs: migration
   build-depends:
-        lib
-      , beam-postgres
-      , aeson
+      lib
+    , aeson
 
 library lib
   import: shared-prop
   hs-source-dirs: lib
-  other-modules:
-        Database.Migrations.V0001
-
   exposed-modules:
-        Database.Migration
-        Database.Scheme
-        Config
-        Utils
+    Config
+    Utils
 
   build-depends:
-        bytestring
-      , beam-core
-      , beam-postgres
-      , beam-migrate
-      , text
-      , time
-      , aeson
+      bytestring
+    , persistent
+    , persistent-postgresql
+    , esqueleto
+    , text
+    , time
+    , aeson
+    , mtl
+    , cryptonite
 
 test-suite test
   import: shared-prop
@@ -55,10 +50,9 @@ test-suite test
   main-is: Main.hs
 
   build-depends:
-        tasty
-      , tasty-hunit
-      , tasty-quickcheck
-      , beam-postgres
-      , text
-      , lib
-      , aeson
+      tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , text
+    , lib
+    , aeson
