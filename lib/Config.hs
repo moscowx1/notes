@@ -13,6 +13,7 @@ import Data.Aeson.TH (deriveJSON, fieldLabelModifier, constructorTagModifier)
 data Config = Config 
   { _connectionString :: Text
   , _poolConnections :: Int
+  , _port :: Int
   }
   deriving (Show, Eq, Generic)
 

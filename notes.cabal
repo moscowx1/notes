@@ -45,6 +45,9 @@ library lib
     , mtl
     , cryptonite
     , monad-logger
+    , servant
+    , servant-server
+    , warp
 
 test-suite test
   import: shared-prop
