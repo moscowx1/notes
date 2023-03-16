@@ -61,7 +61,8 @@ data UserDto = UserDto
   } deriving (Show, Eq, Generic, ToJSON)
 
 data UserApi routes = UserApi
-  { _create :: routes :- "create" :> ReqBody '[JSON] CreateUserReq :> Post '[JSON] (Maybe UserDto)
+  { _create :: routes :- "create" :> ReqBody '[JSON] CreateUserReq
+      :> Post '[JSON] (Maybe UserDto)
   , _getAll :: routes :- "get-all" :> Get '[JSON] [UserDto]
   } deriving (Generic)
 
@@ -77,11 +78,17 @@ main = do
       runSqlPool (runMigration migrateAll) pool
       liftIO $ run _port (server (`runSqlPool` pool))
 
-server :: (forall a. ReaderT SqlBackend (NoLoggingT IO) a -> NoLoggingT IO a) -> Application
-server _ = genericServeT liftIO
+createUser :: SqlBack User -> CreateUserReq-> IO (Maybe UserDto)
+createUser _ _ = -- sql CreateUserReq{..} =
+  Just . UserDto "test" <$> getCurrentTime
+
+type SqlBack a = ReaderT SqlBackend (NoLoggingT IO) a -> NoLoggingT IO a
+
+server :: (forall a. SqlBack a) -> Application
+server sql = genericServeT liftIO
   Api
     { _user = UserApi
-      { _create = undefined
+      { _create = createUser sql
       , _getAll = do
           cur <- getCurrentTime
           pure [UserDto "test" cur]
