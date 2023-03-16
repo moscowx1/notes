@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-
 module Config (Config(..)) where
 
 import Data.Aeson (defaultOptions)
@@ -21,4 +20,3 @@ deriveJSON defaultOptions
   { fieldLabelModifier = drop 1
   , constructorTagModifier = drop 1 
   } ''Config
-
