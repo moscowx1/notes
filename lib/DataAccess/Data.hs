@@ -19,19 +19,19 @@ import Database.Persist.TH
   , persistLowerCase
   , share
   )
-import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Types (Login, Salt, HashedPassword)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
-  login Text
-  salt ByteString
-  password ByteString
+  login Login
+  salt Salt
+  password HashedPassword
   createdAt UTCTime default=now()
 
   UniqueLogin login
-  deriving Show
+  deriving Show Eq
 Note
   content Text
   author UserId

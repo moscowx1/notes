@@ -28,13 +28,15 @@ executable migration
 library lib
   import: shared-prop
   hs-source-dirs: lib
+  exposed-modules:
+    Logic.Auth
+    Types
+    DataAccess.Data
   other-modules:
     Api
     Dto
     Config
     Utils
-    Logic.Auth
-    DataAccess.Data
 
   build-depends:
       bytestring
@@ -67,3 +69,5 @@ test-suite test
     , lib
     , aeson
     , postgresql-simple
+    , cryptonite
+    , time

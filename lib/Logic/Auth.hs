@@ -1,17 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Logic.Auth (Config(..), Handle(..), login, register) where
 
 import Crypto.KDF.PBKDF2 (fastPBKDF2_SHA512, Parameters (..))
-import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
-import Data.Text (Text)
 import DataAccess.Data (User(..))
-
-type Password = ByteString
-type Salt = ByteString
-type Login = Text
-type HashedPassword = ByteString
+import Types (Salt, Login, Password, HashedPassword)
 
 data Config = Config
   { generatingIterCount :: Int
@@ -35,11 +30,10 @@ getHashedPwd
   -> m HashedPassword
 getHashedPwd Handle { _config = Config {..} } password salt = pure hashedPwd
   where
-    hashedPwd :: ByteString
+    hashedPwd :: HashedPassword
     hashedPwd = fastPBKDF2_SHA512 prms password salt
     prms :: Parameters
     prms = Parameters
-    -- TODO: test
       { iterCounts = generatingIterCount
       , outputLength = hashedPasswordLength
       }
@@ -72,14 +66,17 @@ register h@Handle{..} login' password = do
   _addToDb user
 
 login
-  :: (Monad m, MonadFail m)
+  :: (Monad m)
   => Handle m
   -> Login
   -> Password
   -> m (Maybe User)
 login h login' password = do
-  Just user <- _getUser h login'
-  hashedToCheck <- getHashedPwd h password (userSalt user)
-  pure $ if userPassword user == hashedToCheck 
-    then Just user 
-    else Nothing
+  mUser <- _getUser h login'
+  case mUser of
+    Nothing -> pure Nothing
+    Just user -> do
+      password2 <- getHashedPwd h password (userSalt user)
+      if userPassword user == password2
+        then pure $ Just user
+        else pure Nothing
