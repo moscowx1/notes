@@ -18,7 +18,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Lib (main) where
+module Lib  where
 
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
@@ -26,7 +26,7 @@ import Data.Time (UTCTime, getCurrentTime)
 import Config (Config(..))
 import Control.Monad.Logger (runNoLoggingT, NoLoggingT)
 import Database.Persist.TH (mkPersist, sqlSettings, mkMigrate, persistLowerCase, share)
-import Database.Persist.Postgresql (runMigration, withPostgresqlPool, runSqlPool, SqlBackend)
+import Database.Persist.Postgresql (runMigration, withPostgresqlPool, runSqlPool, SqlBackend, UniqueDef (uniqueAttrs))
 import Control.Monad.Cont (MonadIO(liftIO))
 import Data.Aeson (eitherDecodeFileStrict, FromJSON, ToJSON)
 import Utils (throwLeft)
@@ -36,13 +36,16 @@ import Servant.Server.Generic (genericServeT)
 import Control.Monad.Reader (ReaderT)
 import Network.Wai.Handler.Warp (run)
 import Servant.API.Generic (Generic)
+import Data.ByteString (ByteString)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
   login Text
-  salt Text
-  password Text
+  salt ByteString
+  password ByteString
   createdAt UTCTime default=now()
+
+  UniqueLogin login
   deriving Show
 Note
   content Text
