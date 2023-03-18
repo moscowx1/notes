@@ -33,6 +33,7 @@ library lib
     Lib
     Utils
     Test
+    Logic.Auth
 
   build-depends:
       bytestring
