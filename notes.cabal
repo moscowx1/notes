@@ -29,11 +29,12 @@ library lib
   import: shared-prop
   hs-source-dirs: lib
   other-modules:
+    Api
+    Dto
     Config
-    Lib
     Utils
-    Test
     Logic.Auth
+    DataAccess.Data
 
   build-depends:
       bytestring

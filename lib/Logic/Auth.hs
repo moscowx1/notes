@@ -1,13 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
-module Logic.Auth where
+module Logic.Auth (Config(..), Handle(..), login, register) where
 
 import Crypto.KDF.PBKDF2 (fastPBKDF2_SHA512, Parameters (..))
 import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
 import Data.Text (Text)
-import Lib (User(..))
+import DataAccess.Data (User(..))
 
 type Password = ByteString
 type Salt = ByteString
@@ -34,14 +33,15 @@ getHashedPwd
   -> Password
   -> Salt
   -> m HashedPassword
-getHashedPwd Handle { _config } password salt = pure hashedPwd
+getHashedPwd Handle { _config = Config {..} } password salt = pure hashedPwd
   where
     hashedPwd :: ByteString
     hashedPwd = fastPBKDF2_SHA512 prms password salt
     prms :: Parameters
     prms = Parameters
-      { iterCounts = generatingIterCount _config
-      , outputLength = hashedPasswordLength _config
+    -- TODO: test
+      { iterCounts = generatingIterCount
+      , outputLength = hashedPasswordLength
       }
 
 createUser
