@@ -15,28 +15,34 @@ executable notes
   import: shared-prop
   main-is: Main.hs
   hs-source-dirs: app
-  build-depends: lib
+  build-depends: 
+      lib
+    , aeson
+    , servant-server
+    , monad-logger
+    , persistent-postgresql 
+    , text
+    , warp
+    , mtl
 
 executable migration
   import: shared-prop
   main-is: Main.hs
   hs-source-dirs: migration
-  build-depends:
-      lib
-    , aeson
+  build-depends: lib
 
 library lib
   import: shared-prop
   hs-source-dirs: lib
   exposed-modules:
+    Api
+    Config
     Logic.Auth
     Types
     DataAccess.Data
-  other-modules:
-    Api
-    Dto
-    Config
     Utils
+    Dto
+  other-modules:
 
   build-depends:
       bytestring
@@ -49,10 +55,7 @@ library lib
     , aeson
     , mtl
     , cryptonite
-    , monad-logger
     , servant
-    , servant-server
-    , warp
     , memory
 
 test-suite test
