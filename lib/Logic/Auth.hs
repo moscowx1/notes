@@ -1,18 +1,26 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Logic.Auth (Config(..), Handle(..), login, register) where
 
 import Crypto.KDF.PBKDF2 (fastPBKDF2_SHA512, Parameters (..))
+import Data.Aeson (defaultOptions)
+import Data.Aeson.TH (deriveJSON, fieldLabelModifier, constructorTagModifier)
 import Data.Time (UTCTime)
 import DataAccess.Data (User(..))
 import Types (Salt, Login, Password, HashedPassword)
 
 data Config = Config
-  { generatingIterCount :: Int
-  , hashedPasswordLength :: Int
-  , saltLength :: Int
-  }
+  { _generatingIterCount :: Int
+  , _hashedPasswordLength :: Int
+  , _saltLength :: Int
+  } deriving (Eq, Show)
+
+deriveJSON defaultOptions 
+  { fieldLabelModifier = drop 1
+  , constructorTagModifier = drop 1 
+  } ''Config
 
 data Handle m = Handle
   { _config :: Config
@@ -34,8 +42,8 @@ getHashedPwd Handle { _config = Config {..} } password salt = pure hashedPwd
     hashedPwd = fastPBKDF2_SHA512 prms password salt
     prms :: Parameters
     prms = Parameters
-      { iterCounts = generatingIterCount
-      , outputLength = hashedPasswordLength
+      { iterCounts = _generatingIterCount
+      , outputLength = _hashedPasswordLength
       }
 
 createUser

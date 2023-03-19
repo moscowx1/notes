@@ -1,5 +1,10 @@
 {
-  "connectionString": ""
-  "poolConnections": 0
-  "port": 8080
+  "connectionString": "",
+  "poolConnections": 0,
+  "port": 8080,
+  "authConfig": {
+    "generatingIterCount" : 8192,
+    "hashedPasswordLength" : 64,
+    "saltLength" : 32
+  }
 }

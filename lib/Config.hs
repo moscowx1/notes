@@ -8,11 +8,13 @@ import Data.Aeson (defaultOptions)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Data.Aeson.TH (deriveJSON, fieldLabelModifier, constructorTagModifier)
+import qualified Logic.Auth as LA
 
-data Config = Config 
+data Config = Config
   { _connectionString :: Text
   , _poolConnections :: Int
   , _port :: Int
+  , _authConfig :: LA.Config
   }
   deriving (Show, Eq, Generic)
 

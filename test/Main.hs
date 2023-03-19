@@ -21,9 +21,9 @@ main = defaultMain $ testGroup "" [authTest]
 handle :: Auth.Handle ((StateT [User]) Identity)
 handle = Handle
   { _config = Auth.Config
-      { generatingIterCount = 2000
-      , hashedPasswordLength = 60
-      , saltLength = 20
+      { _generatingIterCount = 2000
+      , _hashedPasswordLength = 60
+      , _saltLength = 20
       }
   , _generateSalt = (const . pure . encodeUtf8) "azjkl;sdf"
   , _currentTime = pure $ UTCTime
