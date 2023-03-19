@@ -71,3 +71,4 @@ test-suite test
     , postgresql-simple
     , cryptonite
     , time
+    , mtl
