@@ -1,0 +1,56 @@
+name:               notes
+version:            0.1.0.0
+author:             santra
+maintainer:         moscowx1@mail.ru
+
+ghc-options:
+  - -Wall
+  - -Werror
+
+dependencies:
+  - base
+
+
+executable:
+  main: Main.hs
+  source-dirs: app
+  dependencies:
+    - notes
+    - aeson
+    - servant-server
+    - monad-logger
+    - persistent-postgresql 
+    - text
+    - warp
+    - mtl
+
+library:
+  source-dirs: lib
+  dependencies:
+    - bytestring
+    - persistent
+    - postgresql-simple
+    - esqueleto
+    - text
+    - time
+    - aeson
+    - mtl
+    - cryptonite
+    - servant
+    - memory
+    - monad-logger
+
+tests:
+  spec:
+    main: Main.hs
+    source-dirs: test
+    dependencies:
+      - tasty
+      - tasty-hunit
+      - tasty-quickcheck
+      - text
+      - aeson
+      - postgresql-simple
+      - cryptonite
+      - time
+      - mtl

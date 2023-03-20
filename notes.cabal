@@ -1,80 +1,85 @@
-cabal-version:      2.4
-name:               notes
-version:            0.1.0.0
-author:             santra
-maintainer:         moscowx1@mail.ru
+cabal-version: 1.12
 
-common shared-prop
-  default-language: Haskell2010
-  build-depends: base ^>=4.16.4
-  ghc-options:
-    -Wall
-    -Werror
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
 
-executable notes
-  import: shared-prop
-  main-is: Main.hs
-  hs-source-dirs: app
-  build-depends: 
-      lib
-    , aeson
-    , servant-server
-    , monad-logger
-    , persistent-postgresql 
-    , text
-    , warp
-    , mtl
+name:           notes
+version:        0.1.0.0
+author:         santra
+maintainer:     moscowx1@mail.ru
+build-type:     Simple
 
-executable migration
-  import: shared-prop
-  main-is: Main.hs
-  hs-source-dirs: migration
-  build-depends: lib
-
-library lib
-  import: shared-prop
-  hs-source-dirs: lib
+library
   exposed-modules:
-    Api
-    Logic.Auth
-    Config.Auth
-    Config.Global
-    Types
-    DataAccess.Auth
-    DataAccess.Data
-    Utils
-    Dto
-    Handler.Auth
+      Api
+      Config
+      Config.Auth
+      Config.Global
+      DataAccess.Auth
+      DataAccess.Data
+      Dto
+      Handler.Auth
+      Logic.Auth
+      Types
+      Utils
   other-modules:
-
+      Paths_notes
+  hs-source-dirs:
+      lib
+  ghc-options: -Wall -Werror
   build-depends:
-      bytestring
-    , persistent
-    , postgresql-simple
-    , esqueleto
-    , text
-    , time
-    , aeson
-    , mtl
+      aeson
+    , base
+    , bytestring
     , cryptonite
-    , servant
+    , esqueleto
     , memory
     , monad-logger
+    , mtl
+    , persistent
+    , postgresql-simple
+    , servant
+    , text
+    , time
+  default-language: Haskell2010
 
-test-suite test
-  import: shared-prop
-  type: exitcode-stdio-1.0
-  hs-source-dirs: test
+executable notes
   main-is: Main.hs
-
+  other-modules:
+      Paths_notes
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Werror
   build-depends:
-      tasty
+      aeson
+    , base
+    , monad-logger
+    , mtl
+    , notes
+    , persistent-postgresql
+    , servant-server
+    , text
+    , warp
+  default-language: Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_notes
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Werror
+  build-depends:
+      aeson
+    , base
+    , cryptonite
+    , mtl
+    , postgresql-simple
+    , tasty
     , tasty-hunit
     , tasty-quickcheck
     , text
-    , lib
-    , aeson
-    , postgresql-simple
-    , cryptonite
     , time
-    , mtl
+  default-language: Haskell2010
