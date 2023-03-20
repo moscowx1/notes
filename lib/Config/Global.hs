@@ -2,13 +2,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Config (Config(..)) where
+module Config.Global where
 
+import qualified Config.Auth as A
+import Data.Aeson.TH (deriveJSON, fieldLabelModifier, constructorTagModifier)
 import Data.Aeson (defaultOptions)
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Data.Aeson.TH (deriveJSON, fieldLabelModifier, constructorTagModifier)
-import qualified Config.Auth as A
 
 data Config = Config
   { _connectionString :: Text

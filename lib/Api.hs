@@ -4,7 +4,7 @@
 
 module Api (UserApi(..), Api(..)) where
 
-import Dto (UserCredentialDto, UserDto)
+import Dto (UserDto, UnvalidatedCredential)
 import Servant.API 
   ( Post
   , ReqBody
@@ -14,10 +14,10 @@ import Servant.API
   , Get)
 import Servant.API.Generic (Generic)
 
-
 data UserApi routes = UserApi
-  { _create :: routes :- "create" :> ReqBody '[JSON] UserCredentialDto
-      :> Post '[JSON] (Maybe UserDto)
+  { _register :: routes :- "register" 
+      :> ReqBody '[JSON] UnvalidatedCredential
+      :> Post '[JSON] Bool
   , _getAll :: routes :- "get-all" :> Get '[JSON] [UserDto]
   } deriving (Generic)
 

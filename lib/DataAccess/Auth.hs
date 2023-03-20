@@ -1,12 +1,13 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeApplications #-}
 
-module DataAccess.Auth (addUser) where
+module DataAccess.Auth (addUser, userByLogin) where
 
-import qualified Database.Esqueleto.Experimental as E
-import DataAccess.Data (User)
 import Control.Monad.Reader (MonadIO)
-import Database.Esqueleto.Experimental (SqlPersistT)
+import DataAccess.Data (User, EntityField (UserLogin))
+import qualified Database.Esqueleto.Experimental as E
+import Database.Esqueleto.Experimental (SqlPersistT, (==.), (^.))
 import Types (Login)
 
 addUser
@@ -19,12 +20,14 @@ addUser user = do
     Nothing -> Nothing
     Just x -> Just (E.entityVal x)
 
-{-
+
 userByLogin
   :: MonadIO m
   => Login
   -> SqlPersistT m (Maybe User)
 userByLogin login = do
-  mUser <- E.selectOne $ do
-  pure Nothing
--}
+  mu <- E.selectOne $ do
+    u <- E.from $ E.table @User
+    E.where_ (u ^. UserLogin ==. E.val login)
+    pure u
+  pure (E.entityVal <$> mu)

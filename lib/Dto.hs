@@ -2,18 +2,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Dto (UserDto, UserCredentialDto)  where
+module Dto (UserDto(..), UnvalidatedCredential(..))  where
 import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
 import Data.Time (UTCTime)
 import Data.Text (Text)
 
-data UserCredentialDto = CreateUserReq
-  { login :: Text
-  , password :: Text
+data UnvalidatedCredential = UnvalidatedCredential
+  { _login :: Text
+  , _password :: Text
   } deriving (Show, Eq, Generic, FromJSON)
 
 data UserDto = UserDto
-  { login :: Text
-  , createdAt :: UTCTime
+  { _login :: Text
+  , _createdAt :: UTCTime
   } deriving (Show, Eq, Generic, ToJSON)

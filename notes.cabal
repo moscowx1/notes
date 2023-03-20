@@ -36,18 +36,20 @@ library lib
   hs-source-dirs: lib
   exposed-modules:
     Api
-    Config
     Logic.Auth
+    Config.Auth
+    Config.Global
     Types
+    DataAccess.Auth
     DataAccess.Data
     Utils
     Dto
+    Handler.Auth
   other-modules:
 
   build-depends:
       bytestring
     , persistent
-    , persistent-postgresql
     , postgresql-simple
     , esqueleto
     , text
@@ -57,6 +59,7 @@ library lib
     , cryptonite
     , servant
     , memory
+    , monad-logger
 
 test-suite test
   import: shared-prop

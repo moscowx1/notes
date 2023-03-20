@@ -2,14 +2,14 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main where
+module Main (main) where
 
 import Api (Api(..), UserApi (..))
-import Config (Config(..))
 import Control.Monad.Logger (NoLoggingT(runNoLoggingT))
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (eitherDecodeFileStrict)
-import Database.Persist.Postgresql 
+import Types (SqlBack)
+import Database.Persist.Postgresql
   ( withPostgresqlPool
   , runSqlPool
   , runMigration
@@ -17,10 +17,11 @@ import Database.Persist.Postgresql
 import Data.Text.Encoding (encodeUtf8)
 import DataAccess.Data (migrateAll)
 import Network.Wai.Handler.Warp (run)
-import Types(SqlRuner)
 import Servant.Server.Generic (genericServeT)
 import Servant (Application)
 import Utils (throwLeft)
+import Config.Global (Config(..))
+import Handler.Auth (register)
 
 main :: IO ()
 main = do
@@ -30,20 +31,26 @@ main = do
       runServer c pool
 
   where
-    getPool Config{..} = runNoLoggingT . withPostgresqlPool
+    getPool Config {..} = runNoLoggingT . withPostgresqlPool
       (encodeUtf8 _connectionString)
       _poolConnections
 
-    runServer Config {..} pool = liftIO $
-      run _port (server (runNoLoggingT . (`runSqlPool` pool)))
+    runServer c pool = liftIO $
+      run (_port c) (server c (runNoLoggingT . (`runSqlPool` pool)))
 
-server 
-  :: (forall a. SqlRuner a)
+server
+  :: Config
+  -> (forall a. SqlBack a -> IO a)
   -> Application
-server _ = genericServeT liftIO
+server conf runer = genericServeT liftIO
   Api
     { _user = UserApi
-        { _create = undefined
+        { _register = \k -> do
+            let f = register (_authConfig conf)
+            user <- runer $ f k
+            pure $ case user of
+              Nothing -> False
+              Just _ -> True
         , _getAll = undefined
         }
     }
