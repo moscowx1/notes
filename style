@@ -1,0 +1,4 @@
+#!/bin/sh
+
+hpack --silent
+fourmolu -i lib/ app/
