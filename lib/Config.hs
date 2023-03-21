@@ -2,13 +2,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Config (Config(..)) where
+module Config (Config (..)) where
 
+import qualified Config.Auth as A
 import Data.Aeson (defaultOptions)
+import Data.Aeson.TH (constructorTagModifier, deriveJSON, fieldLabelModifier)
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Data.Aeson.TH (deriveJSON, fieldLabelModifier, constructorTagModifier)
-import qualified Config.Auth as A
 
 data Config = Config
   { _connectionString :: Text
@@ -18,7 +18,9 @@ data Config = Config
   }
   deriving (Show, Eq, Generic)
 
-deriveJSON defaultOptions 
-  { fieldLabelModifier = drop 1
-  , constructorTagModifier = drop 1 
-  } ''Config
+deriveJSON
+  defaultOptions
+    { fieldLabelModifier = drop 1
+    , constructorTagModifier = drop 1
+    }
+  ''Config

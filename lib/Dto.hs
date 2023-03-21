@@ -1,12 +1,13 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Dto (UserDto(..), UnvalidatedCredential(..))  where
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Text (Text)
 import GHC.Generics (Generic)
 import Data.Time (UTCTime)
-import Data.Text (Text)
 
 data UnvalidatedCredential = UnvalidatedCredential
   { _login :: Text

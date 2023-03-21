@@ -1,17 +1,20 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Config.Auth (Config(..)) where
+module Config.Auth (Config (..)) where
 
 import Data.Aeson (defaultOptions)
-import Data.Aeson.TH (constructorTagModifier, fieldLabelModifier, deriveJSON)
+import Data.Aeson.TH (constructorTagModifier, deriveJSON, fieldLabelModifier)
 
 data Config = Config
   { _generatingIterCount :: Int
   , _hashedPasswordLength :: Int
   , _saltLength :: Int
-  } deriving (Eq, Show)
+  }
+  deriving (Eq, Show)
 
-deriveJSON defaultOptions
-  { fieldLabelModifier = drop 1
-  , constructorTagModifier = drop 1
-  } ''Config
+deriveJSON
+  defaultOptions
+    { fieldLabelModifier = drop 1
+    , constructorTagModifier = drop 1
+    }
+  ''Config
