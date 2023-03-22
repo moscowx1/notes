@@ -2,9 +2,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Api (UserApi (..), Api (..)) where
+module Api (Auth (..), Api (..)) where
 
-import Dto.Auth (RegisterReq)
+import Dto.Auth (LoginReq, RegisterReq)
 import Servant.API (
   JSON,
   NamedRoutes,
@@ -15,17 +15,21 @@ import Servant.API (
  )
 import Servant.API.Generic (Generic)
 
-data UserApi routes = UserApi
+data Auth routes = Auth
   { _register ::
       routes
         :- "register"
-        :> ReqBody '[JSON] RegisterReq
-        :> Post '[JSON] Bool
-        -- , _getAll :: routes :- "get-all" :> Get '[JSON] []
+          :> ReqBody '[JSON] RegisterReq
+          :> Post '[JSON] Bool
+  , _signIn ::
+      routes
+        :- "sign-in"
+          :> ReqBody '[JSON] LoginReq
+          :> Post '[JSON] Bool
   }
   deriving (Generic)
 
 data Api routes = Api
-  { _user :: routes :- "user" :> NamedRoutes UserApi
+  { _auth :: routes :- "auth" :> NamedRoutes Auth
   }
   deriving (Generic)

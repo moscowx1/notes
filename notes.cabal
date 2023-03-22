@@ -18,7 +18,6 @@ library
       Config.Global
       DataAccess.Auth
       DataAccess.Data
-      Dto
       Dto.Auth
       Handler.Auth
       Logic.Auth

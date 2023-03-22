@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dto.Auth (LoginReq, RegisterReq, Credential(..)) where
+module Dto.Auth (LoginReq, RegisterReq, Credential (..)) where
 
 import Data.Aeson (FromJSON)
 import Data.Text (Text)

@@ -4,7 +4,7 @@
 
 module Main (main) where
 
-import Api (Api (..), UserApi (..))
+import Api (Api (..), Auth (..))
 import Config.Global (Config (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
@@ -48,14 +48,17 @@ server conf runer =
   genericServeT
     liftIO
     Api
-      { _user =
-          UserApi
-            { _register = \k -> do
-                let f = register (_authConfig conf)
-                user <- runer $ f k
+      { _auth =
+          Auth
+            { _register = \req -> do
+                user <- runer $ (register (_authConfig conf)) req
                 pure $ case user of
                   Nothing -> False
                   Just _ -> True
-            , _getAll = undefined
+            , _signIn = \req -> do
+                user <- runer $ (signIn (_authConfig conf)) req
+                pure $ case user of
+                  Nothing -> False
+                  Just _ -> True
             }
       }
