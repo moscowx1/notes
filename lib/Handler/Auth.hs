@@ -9,7 +9,7 @@ import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
 import DataAccess.Data (User)
-import Dto (UnvalidatedCredential)
+import Dto.Auth (RegisterReq)
 import Logic.Auth (Handle (..))
 import qualified Logic.Auth as LA
 import Types (SqlBackT)
@@ -32,6 +32,6 @@ handle Config{..} =
 register ::
   MonadIO m =>
   Config ->
-  UnvalidatedCredential ->
+  RegisterReq ->
   SqlBackT m (Maybe User)
 register = LA.register . handle

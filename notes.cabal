@@ -19,6 +19,7 @@ library
       DataAccess.Auth
       DataAccess.Data
       Dto
+      Dto.Auth
       Handler.Auth
       Logic.Auth
       Types
