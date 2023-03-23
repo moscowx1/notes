@@ -25,7 +25,7 @@ data Auth routes = Auth
       routes
         :- "sign-in"
           :> ReqBody '[JSON] LoginReq
-          :> Post '[JSON] Bool
+          :> Post '[JSON] String
   }
   deriving (Generic)
 

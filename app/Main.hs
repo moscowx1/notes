@@ -17,7 +17,7 @@ import Database.Persist.Postgresql (
   runSqlPool,
   withPostgresqlPool,
  )
-import Handler.Auth (register)
+import Handler.Auth (register, signIn)
 import Network.Wai.Handler.Warp (run)
 import Servant (Application)
 import Servant.Server.Generic (genericServeT)
@@ -41,8 +41,8 @@ main = do
     liftIO $
       run (_port c) (server c (runNoLoggingT . (`runSqlPool` pool)))
 
-help :: IO (Either String a) -> IO String
-help v = do
+eithToStatus :: IO (Either String a) -> IO String
+eithToStatus v = do
   v' <- v
   pure $ case v' of
     Left err -> err
@@ -61,12 +61,10 @@ server conf runer =
             { _register = \req -> do
                 let func = register (_authConfig conf) req
                 let res = runer $ runExceptT func
-                help res
-            , _signIn = undefined
-            -- \req -> do
-            -- user <- runer $ signIn (_authConfig conf) req
-            -- pure $ case user of
-            --  Nothing -> False
-            --  Just _ -> True
+                eithToStatus res
+            , _signIn = \req -> do
+                let func = signIn (_authConfig conf) req
+                let res = runer $ runExceptT func
+                eithToStatus res
             }
       }

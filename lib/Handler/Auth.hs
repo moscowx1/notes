@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Handler.Auth (register) where
+module Handler.Auth (register, signIn) where
 
 import Config.Auth (Config (..))
 import Control.Monad.Except (ExceptT, MonadIO (liftIO))
@@ -36,3 +36,10 @@ register ::
   RegisterReq ->
   ExceptT String (SqlBackT m) User
 register = LA.register . handle
+
+signIn ::
+  MonadIO m =>
+  Config ->
+  RegisterReq ->
+  ExceptT String (SqlBackT m) User
+signIn = LA.signIn . handle
