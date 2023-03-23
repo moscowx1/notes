@@ -3,9 +3,6 @@ module Types (
   Salt,
   Login,
   HashedPassword,
-  SqlBack,
-  SqlRuner,
-  SqlRunerT,
   SqlBackT,
 ) where
 
@@ -20,7 +17,4 @@ type Salt = ByteString
 type Login = Text
 type HashedPassword = ByteString
 
-type SqlBack = ReaderT SqlBackend (NoLoggingT IO)
 type SqlBackT m = ReaderT SqlBackend (NoLoggingT m)
-type SqlRuner a = ReaderT SqlBackend (NoLoggingT IO) a -> IO a
-type SqlRunerT m a = ReaderT SqlBackend (NoLoggingT m) a -> IO a
