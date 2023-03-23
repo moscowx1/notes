@@ -6,6 +6,7 @@ module Main (main) where
 
 import Api (Api (..), Auth (..))
 import Config.Global (Config (..))
+import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
 import Data.Aeson (eitherDecodeFileStrict)
@@ -40,6 +41,13 @@ main = do
     liftIO $
       run (_port c) (server c (runNoLoggingT . (`runSqlPool` pool)))
 
+help :: IO (Either String a) -> IO String
+help v = do
+  v' <- v
+  pure $ case v' of
+    Left err -> err
+    Right _ -> "Success"
+
 server ::
   Config ->
   (forall a. SqlBack a -> IO a) ->
@@ -51,14 +59,14 @@ server conf runer =
       { _auth =
           Auth
             { _register = \req -> do
-                user <- runer $ (register (_authConfig conf)) req
-                pure $ case user of
-                  Nothing -> False
-                  Just _ -> True
-            , _signIn = \req -> do
-                user <- runer $ (signIn (_authConfig conf)) req
-                pure $ case user of
-                  Nothing -> False
-                  Just _ -> True
+                let func = register (_authConfig conf) req
+                let res = runer $ runExceptT func
+                help res
+            , _signIn = undefined
+            -- \req -> do
+            -- user <- runer $ signIn (_authConfig conf) req
+            -- pure $ case user of
+            --  Nothing -> False
+            --  Just _ -> True
             }
       }

@@ -1,9 +1,10 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Handler.Auth (register) where
 
 import Config.Auth (Config (..))
-import Control.Monad.Reader (MonadIO (liftIO))
+import Control.Monad.Except (ExceptT, MonadIO (liftIO))
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
@@ -33,5 +34,5 @@ register ::
   MonadIO m =>
   Config ->
   RegisterReq ->
-  SqlBackT m (Maybe User)
+  ExceptT String (SqlBackT m) User
 register = LA.register . handle

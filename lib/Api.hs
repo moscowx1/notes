@@ -20,7 +20,7 @@ data Auth routes = Auth
       routes
         :- "register"
           :> ReqBody '[JSON] RegisterReq
-          :> Post '[JSON] Bool
+          :> Post '[JSON] String
   , _signIn ::
       routes
         :- "sign-in"

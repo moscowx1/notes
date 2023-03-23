@@ -1,10 +1,15 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Logic.Auth (Handle (..), signIn, register) where
+module Logic.Auth (Handle (..), register, signIn) where
 
-import Control.Monad.Error.Class (MonadError)
+import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.Except (ExceptT, MonadTrans (lift), when)
+import Control.Monad.Trans.Except (except)
+import Control.Monad.Trans.Maybe (MaybeT (MaybeT), maybeToExceptT)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
@@ -43,42 +48,39 @@ getValidCreds cred = do
   p <- validatePassword (Dto.Auth.password cred)
   pure ValidCred{login = l, password = p}
 
+liftMaybe :: Functor m => e -> m (Maybe a) -> ExceptT e m a
+liftMaybe err = maybeToExceptT err . MaybeT
+
 register ::
-  Monad m =>
+  (Monad m) =>
   Handle m ->
   RegisterReq ->
-  m (Maybe User)
+  ExceptT String m User
 register Handle{..} req = do
-  let validCred = getValidCreds req
-  case validCred of
-    Left _ -> pure Nothing
-    Right (ValidCred{..}) -> do
-      salt <- _generateSalt
-      curTime <- _currentTime
-      let hashedPassword = _hashPassword (encodeUtf8 password) salt
-      _addToDb $
-        User
-          { userLogin = login
-          , userSalt = salt
-          , userPassword = hashedPassword
-          , userCreatedAt = curTime
-          }
+  ValidCred{..} <- except $ getValidCreds req
+  salt <- lift _generateSalt
+  curTime <- lift _currentTime
+  let hashedPassword = _hashPassword (encodeUtf8 password) salt
+  liftMaybe "login already taken" $
+    _addToDb
+      User
+        { userLogin = login
+        , userSalt = salt
+        , userPassword = hashedPassword
+        , userCreatedAt = curTime
+        }
+
+signInErr :: String
+signInErr = "login or password didn`t match"
 
 signIn ::
-  MonadError err m =>
+  Monad m =>
   Handle m ->
   LoginReq ->
-  m (Maybe User)
+  ExceptT String m User
 signIn Handle{..} req = do
-  let cred = getValidCreds req
-  case cred of
-    Left _ -> pure Nothing
-    Right (ValidCred{..}) -> do
-      mUser <- _getUser login
-      case mUser of
-        Nothing -> pure Nothing
-        Just user -> do
-          let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
-          if userPassword user == password2
-            then pure $ Just user
-            else pure Nothing
+  ValidCred{..} <- except $ getValidCreds req
+  user <- liftMaybe signInErr $ _getUser login
+  let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
+  when (userPassword user /= password2) (throwError signInErr)
+  pure user

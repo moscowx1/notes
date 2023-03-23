@@ -38,6 +38,7 @@ library:
     - servant
     - memory
     - monad-logger
+    - transformers
 
 tests:
   spec:
