@@ -1,4 +1,19 @@
+# back
 dist-newstyle/
 
-env.ini
 config.json
+
+# front
+output
+generated-docs
+bower_components
+node_modules
+
+package-lock.json
+*.lock
+
+dist/
+prod/*
+.spago
+.parcel-cache/
+.psc-ide-port
