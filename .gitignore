@@ -16,4 +16,5 @@ dist/
 prod/*
 .spago
 .parcel-cache/
+.psci_modules/
 .psc-ide-port
