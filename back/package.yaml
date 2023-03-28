@@ -21,6 +21,9 @@ executable:
     - persistent-postgresql 
     - text
     - warp
+    - wai
+    - wai-cors
+    - wai-extra
     - mtl
 
 library:
