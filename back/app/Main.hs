@@ -40,6 +40,7 @@ myCors' = cors $ \_ -> do
           [ "Cache-Control"
           , "Content-Language"
           , "Content-Type"
+          , "Content-Encoding"
           , "Expires"
           , "Authorization"
           , "Accept"

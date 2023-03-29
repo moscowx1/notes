@@ -2,7 +2,7 @@ module App.Register (component) where
 
 import Prelude
 
-import Api.Test (mm')
+import Api.Test (kk')
 import Data.String (length)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class.Console (logShow, log)
@@ -44,7 +44,7 @@ handleAction = case _ of
   Submit event -> do
     H.liftEffect $ log "asd123asd"
     H.liftEffect $ Event.preventDefault event
-    resp <- H.liftAff mm'
+    resp <- H.liftAff kk'
     H.liftEffect $ logShow resp
     pure unit
 
