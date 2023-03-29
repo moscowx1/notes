@@ -48,6 +48,7 @@ library
 executable notes
   main-is: Main.hs
   other-modules:
+      Cors
       Paths_notes
   hs-source-dirs:
       app
@@ -55,6 +56,7 @@ executable notes
   build-depends:
       aeson
     , base
+    , case-insensitive
     , monad-logger
     , mtl
     , notes

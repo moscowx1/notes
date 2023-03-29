@@ -10,6 +10,7 @@ import Config.Global (Config (..))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
+import Cors (corsMiddleware)
 import Data.Aeson (eitherDecodeFileStrict)
 import Data.Text.Encoding (encodeUtf8)
 import DataAccess.Data (migrateAll)
@@ -19,38 +20,12 @@ import Database.Persist.Postgresql (
   withPostgresqlPool,
  )
 import Handler.Auth (register, signIn)
-import Network.Wai (Middleware)
 import Network.Wai.Handler.Warp (run)
-import Network.Wai.Middleware.Cors (CorsResourcePolicy (..), cors)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (Application)
 import Servant.Server.Generic (genericServeT)
 import Types (SqlBack)
 import Utils (throwLeft)
-
-myCors' :: Middleware
-myCors' = cors $ \_ -> do
-  Just myPolicy
- where
-  myPolicy =
-    CorsResourcePolicy
-      { corsOrigins = Just (["http://localhost:1234"], True)
-      , corsMethods = ["GET", "PUT", "POST", "OPTIONS"]
-      , corsRequestHeaders =
-          [ "Cache-Control"
-          , "Content-Language"
-          , "Content-Type"
-          , "Content-Encoding"
-          , "Expires"
-          , "Authorization"
-          , "Accept"
-          ]
-      , corsExposedHeaders = Nothing
-      , corsMaxAge = Nothing
-      , corsVaryOrigin = True
-      , corsRequireOrigin = False
-      , corsIgnoreFailures = False
-      }
 
 main :: IO ()
 main = do
@@ -67,7 +42,7 @@ main = do
 
   runServer c pool =
     liftIO $
-      run (_port c) (myCors' . logStdoutDev $ server c (runNoLoggingT . (`runSqlPool` pool)))
+      run (_port c) (corsMiddleware . logStdoutDev $ server c (runNoLoggingT . (`runSqlPool` pool)))
 
 eithToStatus :: IO (Either String a) -> IO String
 eithToStatus v = do

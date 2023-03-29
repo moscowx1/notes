@@ -25,6 +25,7 @@ executable:
     - wai-cors
     - wai-extra
     - mtl
+    - case-insensitive
 
 library:
   source-dirs: lib
