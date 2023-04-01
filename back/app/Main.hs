@@ -1,7 +1,13 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Main (main) where
 
@@ -20,10 +26,12 @@ import Database.Persist.Postgresql (
   withPostgresqlPool,
  )
 import Handler.Auth (register, signIn)
+import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Servant (Application)
-import Servant.Server.Generic (genericServeT)
+import Servant (Application, Context (EmptyContext, (:.))) 
+import Servant.Auth.Server (defaultCookieSettings, defaultJWTSettings)
+import Servant.Server.Generic (genericServeTWithContext)
 import Types (SqlBack)
 import Utils (throwLeft)
 
@@ -56,7 +64,7 @@ server ::
   (forall a. SqlBack a -> IO a) ->
   Application
 server conf runer =
-  genericServeT
+  genericServeTWithContext
     liftIO
     Api
       { _auth =
@@ -70,4 +78,7 @@ server conf runer =
                 let res = runer $ runExceptT func
                 eithToStatus res
             }
+      , _notes = \_ -> do
+          undefined
       }
+    (defaultJWTSettings undefined :. defaultCookieSettings :. EmptyContext)

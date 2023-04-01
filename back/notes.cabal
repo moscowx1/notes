@@ -40,6 +40,7 @@ library
     , persistent
     , postgresql-simple
     , servant
+    , servant-auth
     , text
     , time
     , transformers
@@ -49,6 +50,7 @@ executable notes
   main-is: Main.hs
   other-modules:
       Cors
+      JwtSupport
       Paths_notes
   hs-source-dirs:
       app
@@ -61,6 +63,8 @@ executable notes
     , mtl
     , notes
     , persistent-postgresql
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , text
     , wai
