@@ -2,6 +2,7 @@
 dist-newstyle/
 
 config.json
+jwk.json
 
 # front
 output

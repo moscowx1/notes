@@ -28,6 +28,7 @@ handle Config{..} =
             }
     , _addToDb = addUser
     , _getUser = userByLogin
+    , _setCookie = undefined
     }
 
 register ::

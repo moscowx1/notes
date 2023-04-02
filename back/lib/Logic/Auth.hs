@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -6,6 +7,7 @@
 
 module Logic.Auth (Handle (..), register, signIn) where
 
+import Api (Payload (..), Role (UserRole), SetJwtHeader)
 import Control.Monad.Error.Class (MonadError (throwError))
 import Control.Monad.Except (ExceptT, MonadTrans (lift), when)
 import Control.Monad.Trans.Except (except)
@@ -15,6 +17,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
 import Dto.Auth (Credential (login, password), LoginReq, RegisterReq)
+import Servant.API (NoContent)
 import Types (HashedPassword, Login, Password, Salt)
 
 data Handle m = Handle
@@ -23,6 +26,12 @@ data Handle m = Handle
   , _hashPassword :: Password -> Salt -> HashedPassword
   , _addToDb :: User -> m (Maybe User)
   , _getUser :: Login -> m (Maybe User)
+  , _setCookie ::
+      Payload ->
+      m
+        ( Maybe
+            (NoContent -> SetJwtHeader)
+        )
   }
 
 data ValidCred = ValidCred
@@ -83,4 +92,18 @@ signIn Handle{..} req = do
   user <- liftMaybe signInErr $ _getUser login
   let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
   when (userPassword user /= password2) (throwError signInErr)
+  pure user
+
+signIn2 ::
+  Monad m =>
+  Handle m ->
+  LoginReq ->
+  ExceptT String m User
+signIn2 Handle{..} req = do
+  ValidCred{..} <- except $ getValidCreds req
+  user <- liftMaybe signInErr $ _getUser login
+  let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
+  when (userPassword user /= password2) (throwError signInErr)
+  let paylod = Payload{role = UserRole, login = userLogin user}
+  _ <- liftMaybe "error settings cookie" $ _setCookie paylod
   pure user

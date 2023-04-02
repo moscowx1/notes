@@ -32,8 +32,10 @@ library
       aeson
     , base
     , bytestring
+    , cookie
     , cryptonite
     , esqueleto
+    , jose
     , memory
     , monad-logger
     , mtl
@@ -58,7 +60,9 @@ executable notes
   build-depends:
       aeson
     , base
+    , bytestring
     , case-insensitive
+    , jose
     , monad-logger
     , mtl
     , notes
@@ -67,6 +71,7 @@ executable notes
     , servant-auth-server
     , servant-server
     , text
+    , time
     , wai
     , wai-cors
     , wai-extra

@@ -4,7 +4,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
-
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module JwtSupport where
@@ -24,7 +23,6 @@ import Servant.Auth.Server.Internal.AddSetCookie (
   Nat (S),
  )
 import Servant.Server.Generic (AsServerT)
-
 
 -- need for jwt in NamedRoutes
 -- fixed in servant auth server 0.4.8.0
