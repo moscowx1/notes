@@ -81,18 +81,18 @@ server ::
 server jwk conf runer =
   let jwtSettings = defaultJWTSettings jwk
       cookieSettings = defaultCookieSettings
-      kk = acceptLogin cookieSettings jwtSettings
+      setCookie = acceptLogin cookieSettings jwtSettings
    in genericServeTWithContext
         liftIO
         Api
           { _auth =
               Auth
                 { _register = \req -> do
-                    let func = register (_authConfig conf) kk req
+                    let func = register (_authConfig conf) setCookie req
                     let res = runer $ runExceptT func
                     eithToStatus res
                 , _signIn = \req -> do
-                    let func = signIn (_authConfig conf) kk req
+                    let func = signIn (_authConfig conf) setCookie req
                     res <- runer $ runExceptT func
                     case res of
                       Left err -> error err

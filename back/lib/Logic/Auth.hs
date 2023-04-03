@@ -67,24 +67,35 @@ getValidCreds cred = do
 liftMaybe :: Functor m => e -> m (Maybe a) -> ExceptT e m a
 liftMaybe err = maybeToExceptT err . MaybeT
 
+setCookie ::
+  (MonadIO m) =>
+  JwtHeaderSetter ->
+  User ->
+  ExceptT String m JwtHeader
+setCookie cookieSetter user = do
+  let payload = Payload{role = UserRole, login = userLogin user}
+  cookie <- liftMaybe "error setting cookie" $ liftIO $ cookieSetter payload
+  pure $ cookie NoContent
+
 register ::
-  (Monad m) =>
+  (MonadIO m) =>
   Handle m ->
   RegisterReq ->
-  ExceptT String m User
+  ExceptT String m JwtHeader
 register Handle{..} req = do
   ValidCred{..} <- except $ getValidCreds req
   salt <- lift _generateSalt
   curTime <- lift _currentTime
   let hashedPassword = _hashPassword (encodeUtf8 password) salt
-  liftMaybe "login already taken" $
-    _addToDb
-      User
-        { userLogin = login
-        , userSalt = salt
-        , userPassword = hashedPassword
-        , userCreatedAt = curTime
-        }
+  let user =
+        User
+          { userLogin = login
+          , userSalt = salt
+          , userPassword = hashedPassword
+          , userCreatedAt = curTime
+          }
+  _ <- liftMaybe "login already taken" $ _addToDb user
+  setCookie _setCookie user
 
 signInErr :: String
 signInErr = "login or password didn`t match"
@@ -97,8 +108,6 @@ signIn ::
 signIn Handle{..} req = do
   ValidCred{..} <- except $ getValidCreds req
   user <- liftMaybe signInErr $ _getUser login
-  let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
-  when (userPassword user /= password2) (throwError signInErr)
-  let paylod = Payload{role = UserRole, login = userLogin user}
-  res <- liftMaybe "error settings cookie" $ liftIO $ _setCookie paylod
-  pure $ res NoContent
+  let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
+  when (userPassword user /= passwordToCheck) (throwError signInErr)
+  setCookie _setCookie user

@@ -10,7 +10,6 @@ import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
-import DataAccess.Data (User)
 import Dto.Auth (LoginReq, RegisterReq)
 import Logic.Auth (Handle (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
@@ -37,7 +36,7 @@ register ::
   Config ->
   JwtHeaderSetter ->
   RegisterReq ->
-  ExceptT String (SqlBackT m) User
+  ExceptT String (SqlBackT m) JwtHeader
 register c = LA.register . handle c
 
 signIn ::
