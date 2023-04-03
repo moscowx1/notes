@@ -28,7 +28,7 @@ import Database.Persist.Postgresql (
   runSqlPool,
   withPostgresqlPool,
  )
-import Handler.Auth (register, signIn, signIn2)
+import Handler.Auth (register, signIn)
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
@@ -93,10 +93,6 @@ server jwk conf runer =
                     eithToStatus res
                 , _signIn = \req -> do
                     let func = signIn (_authConfig conf) kk req
-                    let res = runer $ runExceptT func
-                    eithToStatus res
-                , _signIn2 = \req -> do
-                    let func = signIn2 (_authConfig conf) kk req
                     res <- runer $ runExceptT func
                     case res of
                       Left err -> error err

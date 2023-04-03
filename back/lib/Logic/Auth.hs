@@ -5,7 +5,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Logic.Auth (Handle (..), register, signIn, signIn2, JwtHeaderSetter) where
+module Logic.Auth (
+  Handle (..),
+  register,
+  signIn,
+  JwtHeaderSetter,
+) where
 
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad.Error.Class (MonadError (throwError))
@@ -85,23 +90,11 @@ signInErr :: String
 signInErr = "login or password didn`t match"
 
 signIn ::
-  Monad m =>
-  Handle m ->
-  LoginReq ->
-  ExceptT String m User
-signIn Handle{..} req = do
-  ValidCred{..} <- except $ getValidCreds req
-  user <- liftMaybe signInErr $ _getUser login
-  let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
-  when (userPassword user /= password2) (throwError signInErr)
-  pure user
-
-signIn2 ::
   MonadIO m =>
   Handle m ->
   LoginReq ->
   ExceptT String m JwtHeader
-signIn2 Handle{..} req = do
+signIn Handle{..} req = do
   ValidCred{..} <- except $ getValidCreds req
   user <- liftMaybe signInErr $ _getUser login
   let password2 = _hashPassword (encodeUtf8 password) (userSalt user)

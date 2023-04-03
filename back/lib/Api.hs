@@ -56,11 +56,6 @@ data Auth routes = Auth
       routes
         :- "sign-in"
           :> ReqBody '[JSON] LoginReq
-          :> Post '[JSON] String
-  , _signIn2 ::
-      routes
-        :- "sign-in2"
-          :> ReqBody '[JSON] LoginReq
           :> Post '[JSON] JwtHeader
   }
   deriving (Generic)

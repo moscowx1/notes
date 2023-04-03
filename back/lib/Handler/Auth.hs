@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Handler.Auth (register, signIn, signIn2) where
+module Handler.Auth (register, signIn) where
 
 import Api (JwtHeader)
 import Config.Auth (Config (..))
@@ -44,14 +44,6 @@ signIn ::
   MonadIO m =>
   Config ->
   JwtHeaderSetter ->
-  RegisterReq ->
-  ExceptT String (SqlBackT m) User
-signIn c = LA.signIn . handle c
-
-signIn2 ::
-  MonadIO m =>
-  Config ->
-  JwtHeaderSetter ->
   LoginReq ->
   ExceptT String (SqlBackT m) JwtHeader
-signIn2 c = LA.signIn2 . handle c
+signIn c = LA.signIn . handle c
