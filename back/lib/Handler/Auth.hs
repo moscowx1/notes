@@ -1,8 +1,9 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Handler.Auth (register, signIn) where
+module Handler.Auth (register, signIn, signIn2) where
 
+import Api (JwtHeader)
 import Config.Auth (Config (..))
 import Control.Monad.Except (ExceptT, MonadIO (liftIO))
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
@@ -10,13 +11,13 @@ import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
 import DataAccess.Data (User)
-import Dto.Auth (RegisterReq)
-import Logic.Auth (Handle (..))
+import Dto.Auth (LoginReq, RegisterReq)
+import Logic.Auth (Handle (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
 import Types (SqlBackT)
 
-handle :: (MonadIO m) => Config -> Handle (SqlBackT m)
-handle Config{..} =
+handle :: (MonadIO m) => Config -> JwtHeaderSetter -> Handle (SqlBackT m)
+handle Config{..} setCookie =
   Handle
     { _generateSalt = liftIO $ getEntropy _saltLength
     , _currentTime = liftIO getCurrentTime
@@ -28,19 +29,29 @@ handle Config{..} =
             }
     , _addToDb = addUser
     , _getUser = userByLogin
-    , _setCookie = undefined
+    , _setCookie = setCookie
     }
 
 register ::
   MonadIO m =>
   Config ->
+  JwtHeaderSetter ->
   RegisterReq ->
   ExceptT String (SqlBackT m) User
-register = LA.register . handle
+register c = LA.register . handle c
 
 signIn ::
   MonadIO m =>
   Config ->
+  JwtHeaderSetter ->
   RegisterReq ->
   ExceptT String (SqlBackT m) User
-signIn = LA.signIn . handle
+signIn c = LA.signIn . handle c
+
+signIn2 ::
+  MonadIO m =>
+  Config ->
+  JwtHeaderSetter ->
+  LoginReq ->
+  ExceptT String (SqlBackT m) JwtHeader
+signIn2 c = LA.signIn2 . handle c

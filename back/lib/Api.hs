@@ -8,7 +8,7 @@ module Api (
   Api (..),
   Payload (..),
   Role (..),
-  SetJwtHeader,
+  JwtHeader,
 ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -38,7 +38,7 @@ data Role = UserRole | AdminRole
 data Payload = Payload {role :: Role, login :: Text}
   deriving (Generic, FromJSON, ToJSON, ToJWT, FromJWT)
 
-type SetJwtHeader =
+type JwtHeader =
   ( Headers
       '[ Header "Set-Cookie" SetCookie
        , Header "Set-Cookie" SetCookie
@@ -61,7 +61,7 @@ data Auth routes = Auth
       routes
         :- "sign-in2"
           :> ReqBody '[JSON] LoginReq
-          :> Post '[JSON] SetJwtHeader
+          :> Post '[JSON] JwtHeader
   }
   deriving (Generic)
 

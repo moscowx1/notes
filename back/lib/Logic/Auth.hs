@@ -5,11 +5,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Logic.Auth (Handle (..), register, signIn) where
+module Logic.Auth (Handle (..), register, signIn, signIn2, JwtHeaderSetter) where
 
-import Api (Payload (..), Role (UserRole), SetJwtHeader)
+import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad.Error.Class (MonadError (throwError))
-import Control.Monad.Except (ExceptT, MonadTrans (lift), when)
+import Control.Monad.Except (ExceptT, MonadIO (liftIO), MonadTrans (lift), when)
 import Control.Monad.Trans.Except (except)
 import Control.Monad.Trans.Maybe (MaybeT (MaybeT), maybeToExceptT)
 import qualified Data.Text as T
@@ -17,8 +17,15 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
 import Dto.Auth (Credential (login, password), LoginReq, RegisterReq)
-import Servant.API (NoContent)
+import Servant.API (NoContent (NoContent))
 import Types (HashedPassword, Login, Password, Salt)
+
+type JwtHeaderSetter =
+  Payload ->
+  IO
+    ( Maybe
+        (NoContent -> JwtHeader)
+    )
 
 data Handle m = Handle
   { _generateSalt :: m Salt
@@ -26,12 +33,7 @@ data Handle m = Handle
   , _hashPassword :: Password -> Salt -> HashedPassword
   , _addToDb :: User -> m (Maybe User)
   , _getUser :: Login -> m (Maybe User)
-  , _setCookie ::
-      Payload ->
-      m
-        ( Maybe
-            (NoContent -> SetJwtHeader)
-        )
+  , _setCookie :: JwtHeaderSetter
   }
 
 data ValidCred = ValidCred
@@ -95,15 +97,15 @@ signIn Handle{..} req = do
   pure user
 
 signIn2 ::
-  Monad m =>
+  MonadIO m =>
   Handle m ->
   LoginReq ->
-  ExceptT String m User
+  ExceptT String m JwtHeader
 signIn2 Handle{..} req = do
   ValidCred{..} <- except $ getValidCreds req
   user <- liftMaybe signInErr $ _getUser login
   let password2 = _hashPassword (encodeUtf8 password) (userSalt user)
   when (userPassword user /= password2) (throwError signInErr)
   let paylod = Payload{role = UserRole, login = userLogin user}
-  _ <- liftMaybe "error settings cookie" $ _setCookie paylod
-  pure user
+  res <- liftMaybe "error settings cookie" $ liftIO $ _setCookie paylod
+  pure $ res NoContent

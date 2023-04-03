@@ -13,7 +13,7 @@
 
 module Main (main) where
 
-import Api (Api (..), Auth (..), Payload (..), Role (UserRole))
+import Api (Api (..), Auth (..))
 import Config.Global (Config (..))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
@@ -21,7 +21,6 @@ import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
 import Cors (corsMiddleware)
 import Crypto.JOSE (JWK)
 import Data.Aeson (decodeFileStrict, eitherDecodeFileStrict)
-import qualified Data.ByteString.Lazy as LBS
 import Data.Text.Encoding (encodeUtf8)
 import DataAccess.Data (migrateAll)
 import Database.Persist.Postgresql (
@@ -29,12 +28,19 @@ import Database.Persist.Postgresql (
   runSqlPool,
   withPostgresqlPool,
  )
-import Handler.Auth (register, signIn)
+import Handler.Auth (register, signIn, signIn2)
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Servant (Application, Context (EmptyContext, (:.)), NoContent (NoContent))
-import Servant.Auth.Server (JWTSettings, acceptLogin, defaultCookieSettings, defaultJWTSettings, makeJWT)
+import Servant (
+  Application,
+  Context (EmptyContext, (:.)),
+ )
+import Servant.Auth.Server (
+  acceptLogin,
+  defaultCookieSettings,
+  defaultJWTSettings,
+ )
 import Servant.Server.Generic (genericServeTWithContext)
 import Types (SqlBack)
 import Utils (throwLeft)
@@ -82,37 +88,21 @@ server jwk conf runer =
           { _auth =
               Auth
                 { _register = \req -> do
-                    let func = register (_authConfig conf) req
+                    let func = register (_authConfig conf) kk req
                     let res = runer $ runExceptT func
                     eithToStatus res
                 , _signIn = \req -> do
-                    let func = signIn (_authConfig conf) req
+                    let func = signIn (_authConfig conf) kk req
                     let res = runer $ runExceptT func
                     eithToStatus res
-                , _signIn2 = \_ -> do
-                    let p = Payload{role = UserRole, login = "kek"}
-                    m <- kk p
-                    case m of
-                      Nothing -> undefined
-                      Just r -> pure $ r NoContent
+                , _signIn2 = \req -> do
+                    let func = signIn2 (_authConfig conf) kk req
+                    res <- runer $ runExceptT func
+                    case res of
+                      Left err -> error err
+                      Right v -> pure v
                 }
           , _notes = \_ -> do
               undefined
           }
         (jwtSettings :. cookieSettings :. EmptyContext)
-
-{-
-giveJwt ::
-  String ->
-  JWTSettings ->
-  IO LBS.ByteString
-giveJwt login set = do
-  let payload =
-        Payload
-          { role = UserRole
-          , login = login
-          }
-  makeJWT payload set Nothing >>= \case
-    Left e -> error $ show e
-    Right v -> pure v
--}
