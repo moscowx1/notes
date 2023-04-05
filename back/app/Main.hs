@@ -13,7 +13,7 @@
 
 module Main (main) where
 
-import Api (Api (..), Auth (..))
+import Api (Api (..), Auth (..), Notes (Notes, _get), Kek(..))
 import Config.Global (Config (..))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
@@ -29,17 +29,20 @@ import Database.Persist.Postgresql (
   withPostgresqlPool,
  )
 import Handler.Auth (register, signIn)
+-- import JwtCookie (acceptLogin2)
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (
   Application,
   Context (EmptyContext, (:.)),
+  IsSecure (NotSecure),
  )
 import Servant.Auth.Server (
-  acceptLogin,
+  CookieSettings (..),
+  SameSite (..),
   defaultCookieSettings,
-  defaultJWTSettings,
+  defaultJWTSettings, acceptLogin,
  )
 import Servant.Server.Generic (genericServeTWithContext)
 import Types (SqlBack)
@@ -80,7 +83,12 @@ server ::
   Application
 server jwk conf runer =
   let jwtSettings = defaultJWTSettings jwk
-      cookieSettings = defaultCookieSettings
+      cookieSettings =
+        defaultCookieSettings
+          { cookieIsSecure = NotSecure
+          , cookieSameSite = AnySite
+          , cookieXsrfSetting = Nothing
+          }
       setCookie = acceptLogin cookieSettings jwtSettings
    in genericServeTWithContext
         liftIO
@@ -98,7 +106,12 @@ server jwk conf runer =
                       Left err -> error err
                       Right v -> pure v
                 }
-          , _notes = \_ -> do
-              undefined
+          , _notes = \payload -> do
+              Notes
+                { _get = do
+                    print payload
+                    pure "hi"
+                }
+          , _kek = Kek { _mol = pure "Hello" }
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

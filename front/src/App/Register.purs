@@ -62,11 +62,21 @@ component =
 
 register :: Creds -> Aff (Either Error (Response String))
 register cred = request defaultRequest
-  { url = "http://" <> "localhost:8080" <> "/auth/register"
+  { url = "http://" <> "localhost:8080" <> "/auth/sign-in"
   , method = Left POST
   , content = Just $ RB.Json $ encodeCred cred
   , responseFormat = RF.string
   , headers = [ContentType $ MediaType "application/json"]
+  , withCredentials = true
+  }
+
+notes :: Aff (Either Error (Response String))
+notes = request defaultRequest
+  { url = "http://" <> "localhost:8080" <> "/notes/"
+  , method = Left POST
+  , responseFormat = RF.string
+  , headers = [ContentType $ MediaType "application/json"]
+  , withCredentials = true
   }
 
 handleAction ::
@@ -82,7 +92,9 @@ handleAction = case _ of
     H.liftEffect $ Event.preventDefault event
     cred <- gets (_.creds)
     res <- withLoading $ H.liftAff $ register cred
-    _ <- modify (_ { resultText = (show $ lmap printError res) })
+    -- _ <- modify (_ { resultText = (show $ lmap printError res) })
+    res2 <- H.liftAff $ notes
+    _ <- modify (_ { resultText = (show $ lmap printError res2)})
     pure unit
 
   where

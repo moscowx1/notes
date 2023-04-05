@@ -12,7 +12,7 @@ getOrigin req =
   snd <$> find (\(name, _) -> name == mk "Origin") (requestHeaders req)
 
 corsMiddleware :: Middleware
-corsMiddleware = cors $ \req ->
+corsMiddleware = cors $ \req -> do
   Just $ myPolicy (getOrigin req)
  where
   myPolicy origin =

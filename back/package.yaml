@@ -15,8 +15,10 @@ executable:
   source-dirs: app
   dependencies:
     - notes
+    - cookie
     - aeson
     - servant-server
+    - servant
     - servant-auth
     - servant-auth-server
     - jose
@@ -47,6 +49,7 @@ library:
     - cryptonite
     - servant
     - servant-auth
+    - servant-auth-server
     - memory
     - monad-logger
     - transformers

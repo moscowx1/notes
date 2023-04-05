@@ -43,6 +43,7 @@ library
     , postgresql-simple
     , servant
     , servant-auth
+    , servant-auth-server
     , text
     , time
     , transformers
@@ -62,11 +63,13 @@ executable notes
     , base
     , bytestring
     , case-insensitive
+    , cookie
     , jose
     , monad-logger
     , mtl
     , notes
     , persistent-postgresql
+    , servant
     , servant-auth
     , servant-auth-server
     , servant-server
