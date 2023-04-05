@@ -13,7 +13,7 @@
 
 module Main (main) where
 
-import Api (Api (..), Auth (..), Notes (Notes, _get), Kek(..))
+import Api (Api (..), Auth (..), Notes (Notes, _get))
 import Config.Global (Config (..))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (liftIO)
@@ -29,6 +29,7 @@ import Database.Persist.Postgresql (
   withPostgresqlPool,
  )
 import Handler.Auth (register, signIn)
+
 -- import JwtCookie (acceptLogin2)
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
@@ -41,8 +42,9 @@ import Servant (
 import Servant.Auth.Server (
   CookieSettings (..),
   SameSite (..),
+  acceptLogin,
   defaultCookieSettings,
-  defaultJWTSettings, acceptLogin,
+  defaultJWTSettings,
  )
 import Servant.Server.Generic (genericServeTWithContext)
 import Types (SqlBack)
@@ -112,6 +114,5 @@ server jwk conf runer =
                     print payload
                     pure "hi"
                 }
-          , _kek = Kek { _mol = pure "Hello" }
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

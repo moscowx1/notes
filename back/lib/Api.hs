@@ -10,7 +10,6 @@ module Api (
   Payload (..),
   Role (..),
   JwtHeader,
-  Kek(..)
 ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -70,14 +69,10 @@ newtype Notes routes = Notes
   }
   deriving (Generic)
 
-newtype Kek routes = Kek { _mol :: routes :- Post '[PlainText] String }
-  deriving (Generic)
-
 data Api routes = Api
   { _auth :: routes :- "auth" :> NamedRoutes Auth
   , _notes ::
       routes
         :- SA.Auth '[Cookie, JWT] Payload :> "notes" :> NamedRoutes Notes
-  , _kek :: routes :- "kek" :> NamedRoutes Kek
   }
   deriving (Generic)
