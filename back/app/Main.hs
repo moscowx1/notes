@@ -30,14 +30,13 @@ import Database.Persist.Postgresql (
  )
 import Handler.Auth (register, signIn)
 
--- import JwtCookie (acceptLogin2)
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (
   Application,
   Context (EmptyContext, (:.)),
-  IsSecure (NotSecure),
+  IsSecure (Secure),
  )
 import Servant.Auth.Server (
   CookieSettings (..),
@@ -87,8 +86,8 @@ server jwk conf runer =
   let jwtSettings = defaultJWTSettings jwk
       cookieSettings =
         defaultCookieSettings
-          { cookieIsSecure = NotSecure
-          , cookieSameSite = AnySite
+          { cookieIsSecure = Secure
+          , cookieSameSite = SameSiteStrict
           , cookieXsrfSetting = Nothing
           }
       setCookie = acceptLogin cookieSettings jwtSettings
