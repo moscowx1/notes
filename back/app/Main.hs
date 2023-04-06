@@ -102,10 +102,8 @@ server jwk conf runer =
                     eithToStatus res
                 , _signIn = \req -> do
                     let func = signIn (_authConfig conf) setCookie req
-                    res <- runer $ runExceptT func
-                    case res of
-                      Left err -> error err
-                      Right v -> pure v
+                    let k = runer func
+                    undefined
                 }
           , _notes = \payload -> do
               Notes

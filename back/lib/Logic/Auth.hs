@@ -22,6 +22,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
 import Dto.Auth (Credential (login, password), LoginReq, RegisterReq)
+import Servant (ServerError (errReasonPhrase), err400, err401, err500)
 import Servant.API (NoContent (NoContent))
 import Types (HashedPassword, Login, Password, Salt)
 
@@ -37,7 +38,7 @@ data Handle m = Handle
   , _currentTime :: m UTCTime
   , _hashPassword :: Password -> Salt -> HashedPassword
   , _addToDb :: User -> m (Maybe User)
-  , _getUser :: Login -> m (Maybe User)
+  , _getUser :: Login -> m (Maybe User) -- TODO: try maybeT
   , _setCookie :: JwtHeaderSetter
   }
 
@@ -97,17 +98,48 @@ register Handle{..} req = do
   _ <- liftMaybe "login already taken" $ _addToDb user
   setCookie _setCookie user
 
-signInErr :: String
-signInErr = "login or password didn`t match"
+badLoginOrPassword :: ServerError
+badLoginOrPassword =
+  err401
+    { errReasonPhrase = "login or password didn`t matched"
+    }
+
+liftEither :: (MonadError ServerError m) => Either String a -> m a
+liftEither res = case res of
+  Left err ->
+    throwError
+      err400
+        { errReasonPhrase = err
+        }
+  Right a -> pure a
+
+setCookie2 ::
+  (MonadIO m, MonadError ServerError m) =>
+  JwtHeaderSetter ->
+  User ->
+  m JwtHeader
+setCookie2 cookieSetter user = do
+  let payload = Payload{role = UserRole, login = userLogin user}
+  res <- liftIO $ cookieSetter payload
+  case res of
+    Nothing -> throwError err500
+    Just c -> pure $ c NoContent
+
+liftMaybe' :: (MonadError ServerError m) => ServerError ->  m (Maybe a) -> m a
+liftMaybe' err r = do
+  r' <- r
+  case r' of
+    Nothing -> throwError err
+    Just x -> pure x
 
 signIn ::
-  MonadIO m =>
+  (MonadIO m, MonadError ServerError m) =>
   Handle m ->
   LoginReq ->
-  ExceptT String m JwtHeader
+  m JwtHeader
 signIn Handle{..} req = do
-  ValidCred{..} <- except $ getValidCreds req
-  user <- liftMaybe signInErr $ _getUser login
+  ValidCred{..} <- liftEither $ getValidCreds req
+  user <- liftMaybe' badLoginOrPassword $ _getUser login
   let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
-  when (userPassword user /= passwordToCheck) (throwError signInErr)
-  setCookie _setCookie user
+  when (userPassword user /= passwordToCheck) (throwError badLoginOrPassword)
+  setCookie2 _setCookie user

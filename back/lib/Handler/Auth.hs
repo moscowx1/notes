@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -5,7 +6,7 @@ module Handler.Auth (register, signIn) where
 
 import Api (JwtHeader)
 import Config.Auth (Config (..))
-import Control.Monad.Except (ExceptT, MonadIO (liftIO))
+import Control.Monad.Except (ExceptT, MonadError, MonadIO (liftIO))
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
@@ -13,7 +14,9 @@ import DataAccess.Auth (addUser, userByLogin)
 import Dto.Auth (LoginReq, RegisterReq)
 import Logic.Auth (Handle (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
+import Servant (ServerError)
 import Types (SqlBackT)
+import Database.Esqueleto (SqlBackend)
 
 handle :: (MonadIO m) => Config -> JwtHeaderSetter -> Handle (SqlBackT m)
 handle Config{..} setCookie =
@@ -39,10 +42,20 @@ register ::
   ExceptT String (SqlBackT m) JwtHeader
 register c = LA.register . handle c
 
+{-
 signIn ::
   MonadIO m =>
   Config ->
   JwtHeaderSetter ->
   LoginReq ->
   ExceptT String (SqlBackT m) JwtHeader
+signIn c = LA.signIn . handle c
+-}
+
+signIn ::
+  (MonadIO m, MonadError ServerError m) =>
+  Config ->
+  JwtHeaderSetter ->
+  LoginReq ->
+  (SqlBackT m) JwtHeader
 signIn c = LA.signIn . handle c

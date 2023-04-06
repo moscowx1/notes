@@ -50,6 +50,7 @@ library:
     - servant
     - servant-auth
     - servant-auth-server
+    - servant-server
     - memory
     - monad-logger
     - transformers
