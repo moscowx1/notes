@@ -15,7 +15,7 @@ module Main (main) where
 
 import Api (Api (..), Auth (..), Notes (Notes, _get))
 import Config.Global (Config (..))
-import Control.Monad.Except (runExceptT)
+import Control.Monad.Except (MonadError (throwError), runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
 import Cors (corsMiddleware)
@@ -28,8 +28,9 @@ import Database.Persist.Postgresql (
   runSqlPool,
   withPostgresqlPool,
  )
-import Handler.Auth (register, signIn)
+import Handler.Auth (register, signIn, signIn')
 
+import Control.Monad.Reader (ReaderT (runReaderT))
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
@@ -101,9 +102,12 @@ server jwk conf runer =
                     let res = runer $ runExceptT func
                     eithToStatus res
                 , _signIn = \req -> do
-                    let func = signIn (_authConfig conf) setCookie req
-                    let k = runer func
+                    let f = signIn' (_authConfig conf) setCookie req
                     undefined
+                    -- let func = signIn (_authConfig conf) setCookie req
+                    -- let k = runReaderT runer func
+                    -- let z = runer func
+                    -- undefined
                 }
           , _notes = \payload -> do
               Notes
