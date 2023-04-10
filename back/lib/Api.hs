@@ -49,12 +49,16 @@ type JwtHeader =
   )
 
 data Auth routes = Auth
-  { _register ::
+  { 
+    {-
+    _register ::
       routes
         :- "register"
           :> ReqBody '[JSON] RegisterReq
           :> Post '[JSON] String
-  , _signIn ::
+  ,
+  -}
+   _signIn ::
       routes
         :- "sign-in"
           :> ReqBody '[JSON] LoginReq
@@ -73,6 +77,6 @@ data Api routes = Api
   { _auth :: routes :- "auth" :> NamedRoutes Auth
   , _notes ::
       routes
-        :- SA.Auth '[Cookie, JWT] Payload :> "notes" :> NamedRoutes Notes
+        :- SA.Auth '[Cookie] Payload :> "notes" :> NamedRoutes Notes
   }
   deriving (Generic)

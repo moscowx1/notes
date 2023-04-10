@@ -5,8 +5,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Logic.Auth (
-  Handle (..),
+module Logic.Auth2 (
+  Handle2 (..),
   signIn,
   JwtHeaderSetter,
 ) where
@@ -14,6 +14,7 @@ module Logic.Auth (
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.Trans.Maybe (MaybeT (runMaybeT), maybeToExceptT)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
@@ -25,17 +26,14 @@ import Types (HashedPassword, Login, Password, Salt)
 
 type JwtHeaderSetter m =
   Payload ->
-  m
-    ( Maybe
-        (NoContent -> JwtHeader)
-    )
+  MaybeT m (NoContent -> JwtHeader)
 
-data Handle m = Handle
+data Handle2 m = Handle
   { _generateSalt :: m Salt
   , _currentTime :: m UTCTime
   , _hashPassword :: Password -> Salt -> HashedPassword
-  , _addToDb :: User -> m (Maybe User)
-  , _getUser :: Login -> m (Maybe User) -- TODO: try maybeT
+  , _addToDb :: User -> MaybeT m User
+  , _getUser :: Login -> MaybeT m User
   , _setCookie :: JwtHeaderSetter m
   }
 
@@ -62,23 +60,6 @@ getValidCreds cred = do
   p <- validatePassword (Dto.Auth.password cred)
   pure ValidCred{login = l, password = p}
 
-{-
-  do
-  ValidCred{..} <- except $ getValidCreds req
-  salt <- lift _generateSalt
-  curTime <- lift _currentTime
-  let hashedPassword = _hashPassword (encodeUtf8 password) salt
-  let user =
-        User
-          { userLogin = login
-          , userSalt = salt
-          , userPassword = hashedPassword
-          , userCreatedAt = curTime
-          }
-  _ <- liftMaybe "login already taken" $ _addToDb user
-  setCookie _setCookie user
--}
-
 badLoginOrPassword :: ServerError
 badLoginOrPassword =
   err401
@@ -101,7 +82,7 @@ setCookie2 ::
   m JwtHeader
 setCookie2 cookieSetter user = do
   let payload = Payload{role = UserRole, login = userLogin user}
-  res <- cookieSetter payload
+  res <- runMaybeT $ cookieSetter payload
   case res of
     Nothing -> throwError err500
     Just c -> pure $ c NoContent
@@ -113,14 +94,25 @@ liftMaybe' err r = do
     Nothing -> throwError err
     Just x -> pure x
 
+throwMaybe ::
+  (MonadError ServerError m) =>
+  ServerError ->
+  MaybeT m User ->
+  m User
+throwMaybe err mu = do
+  u <- runMaybeT mu
+  case u of
+    Nothing -> throwError err
+    Just x -> pure x
+
 signIn ::
   (MonadError ServerError m) =>
-  Handle m ->
+  Handle2 m ->
   LoginReq ->
   m JwtHeader
 signIn Handle{..} req = do
   ValidCred{..} <- liftEither $ getValidCreds req
-  user <- liftMaybe' badLoginOrPassword $ _getUser login
+  user <- throwMaybe badLoginOrPassword $ _getUser login
   let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
   when (userPassword user /= passwordToCheck) (throwError badLoginOrPassword)
   setCookie2 _setCookie user

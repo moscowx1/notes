@@ -16,9 +16,7 @@ addUser ::
   SqlPersistT m (Maybe User)
 addUser user = do
   res <- E.insertUniqueEntity user
-  pure $ case res of
-    Nothing -> Nothing
-    Just x -> Just (E.entityVal x)
+  pure $ E.entityVal <$> res
 
 userByLogin ::
   MonadIO m =>

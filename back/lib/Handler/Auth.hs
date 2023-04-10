@@ -36,6 +36,22 @@ handle Config{..} setCookie =
     , _setCookie = lift . lift . setCookie
     }
 
+-- handle2 :: (MonadIO m) => Config -> JwtHeaderSetter m -> Handle (SqlBackT m)
+handle2 Config{..} setCookie =
+  Handle
+    { _generateSalt = liftIO $ getEntropy _saltLength
+    , _currentTime = liftIO getCurrentTime
+    , _hashPassword =
+        fastPBKDF2_SHA512 $
+          Parameters
+            { iterCounts = _generatingIterCount
+            , outputLength = _hashedPasswordLength
+            }
+    , _addToDb = addUser
+    , _getUser = userByLogin
+    , _setCookie = lift . lift . setCookie
+    }
+
 register ::
   MonadIO m =>
   Config ->
@@ -67,6 +83,13 @@ signIn ::
   LoginReq ->
   SqlBackT (ExceptT ServerError IO) JwtHeader
 signIn config jwtSetter = LA.signIn (handle config (lift . jwtSetter))
+
+signIn2 ::
+  Config ->
+  JwtHeaderSetter IO ->
+  LoginReq ->
+  ExceptT ServerError SqlBack JwtHeader
+signIn2 config jwtSetter = LA.signIn (handle2 config (_a jwtSetter))
 
 signIn' ::
   Config ->
