@@ -32,8 +32,8 @@ data Handle2 m = Handle
   { _generateSalt :: m Salt
   , _currentTime :: m UTCTime
   , _hashPassword :: Password -> Salt -> HashedPassword
-  , _addToDb :: User -> MaybeT m User
-  , _getUser :: Login -> MaybeT m User
+  , _addToDb :: User -> m (Maybe User)
+  , _getUser :: Login -> m (Maybe User)
   , _setCookie :: JwtHeaderSetter m
   }
 
@@ -112,7 +112,7 @@ signIn ::
   m JwtHeader
 signIn Handle{..} req = do
   ValidCred{..} <- liftEither $ getValidCreds req
-  user <- throwMaybe badLoginOrPassword $ _getUser login
+  user <- liftMaybe' badLoginOrPassword $ _getUser login
   let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
   when (userPassword user /= passwordToCheck) (throwError badLoginOrPassword)
   setCookie2 _setCookie user

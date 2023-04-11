@@ -22,6 +22,7 @@ import Dto.Auth (Credential (login, password), LoginReq)
 import Servant (ServerError (errReasonPhrase), err400, err401, err500)
 import Servant.API (NoContent (NoContent))
 import Types (HashedPassword, Login, Password, Salt)
+import Control.Monad.Error (lift)
 
 type JwtHeaderSetter m =
   Payload ->
