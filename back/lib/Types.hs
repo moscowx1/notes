@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 module Types (
   Password,
   Salt,
@@ -5,6 +7,7 @@ module Types (
   HashedPassword,
   SqlBack,
   SqlBackT,
+  SqlRuner
 ) where
 
 import Control.Monad.Logger (NoLoggingT)
@@ -18,5 +21,6 @@ type Salt = ByteString
 type Login = Text
 type HashedPassword = ByteString
 
+type SqlRuner = forall a. SqlBack a -> IO a
 type SqlBack = ReaderT SqlBackend (NoLoggingT IO)
 type SqlBackT m = ReaderT SqlBackend (NoLoggingT m)

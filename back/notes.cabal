@@ -21,8 +21,8 @@ library
       Dto.Auth
       Handler.Auth
       Logic.Auth
+      Test
       Types
-      Utils
   other-modules:
       Paths_notes
   hs-source-dirs:

@@ -6,68 +6,27 @@ module Handler.Auth (register, signIn) where
 
 import Api (JwtHeader)
 import Config.Auth (Config (..))
-import Control.Monad.Except (ExceptT (..), MonadIO (liftIO), MonadTrans (lift), runExceptT)
-import Control.Monad.Identity
-import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
-import Control.Monad.Reader (ReaderT (runReaderT))
+import Control.Monad.Except (
+  ExceptT (..),
+  MonadIO (liftIO),
+  MonadTrans (lift),
+ )
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
-import Database.Esqueleto.Experimental (SqlBackend)
 import Dto.Auth (LoginReq, RegisterReq)
 import Logic.Auth (Handle (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
 import Servant (Handler (Handler), ServerError)
-import Types (SqlBack, SqlBackT)
+import Types (SqlRuner)
 
-handle :: (MonadIO m) => Config -> JwtHeaderSetter m -> Handle (SqlBackT m)
-handle Config{..} setCookie =
-  Handle
-    { _generateSalt = liftIO $ getEntropy _saltLength
-    , _currentTime = liftIO getCurrentTime
-    , _hashPassword =
-        fastPBKDF2_SHA512 $
-          Parameters
-            { iterCounts = _generatingIterCount
-            , outputLength = _hashedPasswordLength
-            }
-    , _addToDb = addUser
-    , _getUser = userByLogin
-    , _setCookie = lift . lift . setCookie
-    }
-
-lol ::
-  JwtHeaderSetter IO ->
-  JwtHeaderSetter
-    (ExceptT ServerError (ReaderT SqlBackend (NoLoggingT IO)))
-lol set = liftIO . set
-
-handle2 ::
-  Config ->
-  JwtHeaderSetter IO ->
-  Handle (ExceptT ServerError SqlBack)
-handle2 Config{..} setCookie =
-  Handle
-    { _generateSalt = liftIO $ getEntropy _saltLength
-    , _currentTime = liftIO getCurrentTime
-    , _hashPassword =
-        fastPBKDF2_SHA512 $
-          Parameters
-            { iterCounts = _generatingIterCount
-            , outputLength = _hashedPasswordLength
-            }
-    , _addToDb = lift . addUser
-    , _getUser = lift . userByLogin
-    , _setCookie = liftIO . setCookie
-    }
-
-handle3 ::
-  (forall a. SqlBack a -> IO a) ->
+handle ::
+  SqlRuner ->
   Config ->
   JwtHeaderSetter IO ->
   Handle (ExceptT ServerError IO)
-handle3 sql Config{..} setCookie =
+handle sql Config{..} setCookie =
   Handle
     { _generateSalt = liftIO $ getEntropy _saltLength
     , _currentTime = liftIO getCurrentTime
@@ -82,37 +41,22 @@ handle3 sql Config{..} setCookie =
     , _setCookie = liftIO . setCookie
     }
 
-signIn3 ::
-  (forall a. SqlBack a -> IO a) ->
+signIn ::
+  SqlRuner ->
   Config ->
   JwtHeaderSetter IO ->
   LoginReq ->
   Handler JwtHeader
-signIn3 sql config jwtSetter = LA.signIn h
+signIn runer config jwtSetter = Handler . LA.signIn h
  where
-  h = handle3 sql config jwtSetter
-  h' = Handler h
+  h = handle runer config jwtSetter
 
 register ::
-  MonadIO m =>
+  SqlRuner ->
   Config ->
-  JwtHeaderSetter m ->
+  JwtHeaderSetter IO ->
   RegisterReq ->
-  ExceptT String (SqlBackT m) JwtHeader
-register _ = undefined -- LA.register . handle c
-
-signIn ::
-  Config ->
-  JwtHeaderSetter IO ->
-  LoginReq ->
-  -- Handler (SqlBack JwtHeader)
-  ExceptT ServerError SqlBack JwtHeader
-signIn config jwtSetter = LA.signIn (handle2 config jwtSetter)
-
-signIn2 ::
-  Config ->
-  JwtHeaderSetter IO ->
-  LoginReq ->
-  -- Handler (SqlBack JwtHeader)
-  ExceptT ServerError SqlBack JwtHeader
-signIn2 config jwtSetter = LA.signIn (handle2 config jwtSetter)
+  Handler JwtHeader
+register runer config jwtSet = Handler . LA.register h
+ where
+  h = handle runer config jwtSet

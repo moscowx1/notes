@@ -8,6 +8,7 @@
 module Logic.Auth (
   Handle (..),
   signIn,
+  register,
   JwtHeaderSetter,
 ) where
 
@@ -18,11 +19,10 @@ import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
-import Dto.Auth (Credential (login, password), LoginReq)
-import Servant (ServerError (errReasonPhrase), err400, err401, err500)
+import Dto.Auth (Credential (login, password), LoginReq, RegisterReq)
+import Servant (ServerError (errReasonPhrase), err400, err401, err409, err500)
 import Servant.API (NoContent (NoContent))
 import Types (HashedPassword, Login, Password, Salt)
-import Control.Monad.Error (lift)
 
 type JwtHeaderSetter m =
   Payload ->
@@ -36,7 +36,7 @@ data Handle m = Handle
   , _currentTime :: m UTCTime
   , _hashPassword :: Password -> Salt -> HashedPassword
   , _addToDb :: User -> m (Maybe User)
-  , _getUser :: Login -> m (Maybe User) -- TODO: try maybeT
+  , _getUser :: Login -> m (Maybe User)
   , _setCookie :: JwtHeaderSetter m
   }
 
@@ -63,27 +63,16 @@ getValidCreds cred = do
   p <- validatePassword (Dto.Auth.password cred)
   pure ValidCred{login = l, password = p}
 
-{-
-  do
-  ValidCred{..} <- except $ getValidCreds req
-  salt <- lift _generateSalt
-  curTime <- lift _currentTime
-  let hashedPassword = _hashPassword (encodeUtf8 password) salt
-  let user =
-        User
-          { userLogin = login
-          , userSalt = salt
-          , userPassword = hashedPassword
-          , userCreatedAt = curTime
-          }
-  _ <- liftMaybe "login already taken" $ _addToDb user
-  setCookie _setCookie user
--}
-
 badLoginOrPassword :: ServerError
 badLoginOrPassword =
   err401
     { errReasonPhrase = "login or password didn`t matched"
+    }
+
+loginAlreadyTaken :: ServerError
+loginAlreadyTaken =
+  err409
+    { errReasonPhrase = "login already taken"
     }
 
 liftEither :: (MonadError ServerError m) => Either String a -> m a
@@ -95,12 +84,12 @@ liftEither res = case res of
         }
   Right a -> pure a
 
-setCookie2 ::
+setCookie ::
   (MonadError ServerError m) =>
   JwtHeaderSetter m ->
   User ->
   m JwtHeader
-setCookie2 cookieSetter user = do
+setCookie cookieSetter user = do
   let payload = Payload{role = UserRole, login = userLogin user}
   res <- cookieSetter payload
   case res of
@@ -114,6 +103,26 @@ liftMaybe' err r = do
     Nothing -> throwError err
     Just x -> pure x
 
+register ::
+  (MonadError ServerError m) =>
+  Handle m ->
+  RegisterReq ->
+  m JwtHeader
+register Handle{..} req = do
+  ValidCred{..} <- liftEither $ getValidCreds req
+  salt <- _generateSalt
+  curTime <- _currentTime
+  let hashedPassword = _hashPassword (encodeUtf8 password) salt
+  let user =
+        User
+          { userLogin = login
+          , userSalt = salt
+          , userPassword = hashedPassword
+          , userCreatedAt = curTime
+          }
+  _ <- liftMaybe' loginAlreadyTaken $ _addToDb user
+  setCookie _setCookie user
+
 signIn ::
   (MonadError ServerError m) =>
   Handle m ->
@@ -124,4 +133,4 @@ signIn Handle{..} req = do
   user <- liftMaybe' badLoginOrPassword $ _getUser login
   let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
   when (userPassword user /= passwordToCheck) (throwError badLoginOrPassword)
-  setCookie2 _setCookie user
+  setCookie _setCookie user
