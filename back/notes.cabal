@@ -21,7 +21,6 @@ library
       Dto.Auth
       Handler.Auth
       Logic.Auth
-      Test
       Types
   other-modules:
       Paths_notes
