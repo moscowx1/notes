@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -15,6 +16,8 @@ module Logic.Auth (
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.Logger (MonadLogger, logDebugN)
+import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
@@ -96,8 +99,8 @@ setCookie cookieSetter user = do
     Nothing -> throwError err500
     Just c -> pure $ c NoContent
 
-liftMaybe' :: (MonadError ServerError m) => ServerError -> m (Maybe a) -> m a
-liftMaybe' err r = do
+liftMaybe :: (MonadError ServerError m) => ServerError -> m (Maybe a) -> m a
+liftMaybe err r = do
   r' <- r
   case r' of
     Nothing -> throwError err
@@ -120,8 +123,69 @@ register Handle{..} req = do
           , userPassword = hashedPassword
           , userCreatedAt = curTime
           }
-  _ <- liftMaybe' loginAlreadyTaken $ _addToDb user
+  _ <- liftMaybe loginAlreadyTaken $ _addToDb user
   setCookie _setCookie user
+
+throw400 :: String -> ServerError
+throw400 err =
+  err400
+    { errReasonPhrase = err
+    }
+
+type StartLogMessage = Text
+type EndLogMessage = Text
+type ErrorLogMessage = Text
+
+withDebugLog ::
+  (MonadLogger m) =>
+  StartLogMessage ->
+  m a ->
+  EndLogMessage ->
+  m a
+withDebugLog s m e = do
+  logDebugN s
+  res <- m
+  logDebugN e
+  pure res
+
+maybeWithLog ::
+  (MonadLogger m) =>
+  StartLogMessage ->
+  m (Maybe a) ->
+  ErrorLogMessage ->
+  EndLogMessage ->
+  m (Maybe a)
+maybeWithLog startM action errM endM = do
+  logDebugN startM
+  action >>= \case
+    Nothing -> logDebugN errM >> pure Nothing
+    Just x -> logDebugN endM >> pure $ Just x
+
+handleWithLog ::
+  (MonadError ServerError m, MonadLogger m) =>
+  Handle m ->
+  Handle m
+handleWithLog h =
+  Handle
+    { _generateSalt =
+        withDebugLog
+          "generating salt"
+          (_generateSalt h)
+          "salt generated"
+    , _currentTime =
+        withDebugLog
+          "getting current time"
+          (_currentTime h)
+          "current time get"
+    , _hashPassword =
+        withDebugLog
+          "hashing password time"
+          (_hashPassword h)
+          "password hashed"
+    , _addToDb = undefined
+    , _getUser = undefined
+    , _setCookie = undefined
+    }
 
 signIn ::
   (MonadError ServerError m) =>
@@ -130,7 +194,7 @@ signIn ::
   m JwtHeader
 signIn Handle{..} req = do
   ValidCred{..} <- liftEither $ getValidCreds req
-  user <- liftMaybe' badLoginOrPassword $ _getUser login
+  user <- liftMaybe badLoginOrPassword $ _getUser login
   let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
   when (userPassword user /= passwordToCheck) (throwError badLoginOrPassword)
   setCookie _setCookie user
