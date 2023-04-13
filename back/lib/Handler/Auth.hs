@@ -60,10 +60,10 @@ signIn ::
   LA.JwtHeaderSetter IO ->
   LoginReq ->
   Handler JwtHeader
-signIn runer config jwtSetter = Handler . signIn' h
+signIn runer config jwtSetter = Handler . signIn'
  where
   h = handle runer config jwtSetter
-  signIn' h' r = withExceptT mapper (LA.signIn h' r)
+  signIn' r = withExceptT mapper (LA.signIn h r)
 
 register ::
   SqlRuner ->
@@ -71,7 +71,7 @@ register ::
   JwtHeaderSetter IO ->
   RegisterReq ->
   Handler JwtHeader
-register runer config jwtSet = Handler . register' h
+register runer config jwtSet = Handler . register'
  where
   h = handle runer config jwtSet
-  register' h' r = withExceptT mapper (LA.register h' r)
+  register' r = withExceptT mapper (LA.register h r)
