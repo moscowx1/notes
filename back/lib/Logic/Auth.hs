@@ -15,7 +15,7 @@ module Logic.Auth (
 
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
-import Control.Monad.Error.Class (MonadError (throwError))
+import Control.Monad.Error.Class (MonadError (throwError), liftEither)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
@@ -70,11 +70,6 @@ getValidCreds cred = do
   l <- validateLogin (Dto.Auth.login cred)
   p <- validatePassword (Dto.Auth.password cred)
   pure ValidCred{login = l, password = p}
-
-liftEither :: (MonadError e m) => Either e a -> m a
-liftEither res = case res of
-  Left err -> throwError err
-  Right a -> pure a
 
 setCookie ::
   (MonadError AuthError m) =>
