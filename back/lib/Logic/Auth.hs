@@ -3,10 +3,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Logic.Auth (
+  AuthError (..),
   Handle (..),
   signIn,
   register,
@@ -16,14 +16,12 @@ module Logic.Auth (
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Control.Monad.Error.Class (MonadError (throwError))
-import Control.Monad.Logger (MonadLogger, logDebugN)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
 import Dto.Auth (Credential (login, password), LoginReq, RegisterReq)
-import Servant (ServerError (errReasonPhrase), err400, err401, err409, err500)
 import Servant.API (NoContent (NoContent))
 import Types (HashedPassword, Login, Password, Salt)
 
@@ -33,6 +31,13 @@ type JwtHeaderSetter m =
     ( Maybe
         (NoContent -> JwtHeader)
     )
+
+data AuthError
+  = InvalidLogin
+  | InvalidPassword
+  | LoginAlreadyTaken
+  | CannotAuth
+  | ErrorSettingCookie
 
 data Handle m = Handle
   { _generateSalt :: m Salt
@@ -44,62 +49,45 @@ data Handle m = Handle
   }
 
 data ValidCred = ValidCred
-  { login :: T.Text
-  , password :: T.Text
+  { login :: Text
+  , password :: Text
   }
 
-validateLogin :: T.Text -> Either String Login
+validateLogin :: Text -> Either AuthError Login
 validateLogin login' =
   if T.length login' > 3
     then Right login'
-    else Left "invalid login"
+    else Left InvalidLogin
 
-validatePassword :: T.Text -> Either String T.Text
+validatePassword :: Text -> Either AuthError Text
 validatePassword password =
   if T.length password > 5
     then Right password
-    else Left "invalid password"
+    else Left InvalidPassword
 
-getValidCreds :: Credential -> Either String ValidCred
+getValidCreds :: Credential -> Either AuthError ValidCred
 getValidCreds cred = do
   l <- validateLogin (Dto.Auth.login cred)
   p <- validatePassword (Dto.Auth.password cred)
   pure ValidCred{login = l, password = p}
 
-badLoginOrPassword :: ServerError
-badLoginOrPassword =
-  err401
-    { errReasonPhrase = "login or password didn`t matched"
-    }
-
-loginAlreadyTaken :: ServerError
-loginAlreadyTaken =
-  err409
-    { errReasonPhrase = "login already taken"
-    }
-
-liftEither :: (MonadError ServerError m) => Either String a -> m a
+liftEither :: (MonadError e m) => Either e a -> m a
 liftEither res = case res of
-  Left err ->
-    throwError
-      err400
-        { errReasonPhrase = err
-        }
+  Left err -> throwError err
   Right a -> pure a
 
 setCookie ::
-  (MonadError ServerError m) =>
+  (MonadError AuthError m) =>
   JwtHeaderSetter m ->
   User ->
   m JwtHeader
 setCookie cookieSetter user = do
   let payload = Payload{role = UserRole, login = userLogin user}
-  res <- cookieSetter payload
-  case res of
-    Nothing -> throwError err500
+  cookieSetter payload >>= \case
+    Nothing -> throwError ErrorSettingCookie
     Just c -> pure $ c NoContent
 
-liftMaybe :: (MonadError ServerError m) => ServerError -> m (Maybe a) -> m a
+liftMaybe :: (MonadError e m) => e -> m (Maybe a) -> m a
 liftMaybe err r = do
   r' <- r
   case r' of
@@ -107,7 +95,7 @@ liftMaybe err r = do
     Just x -> pure x
 
 register ::
-  (MonadError ServerError m) =>
+  (MonadError AuthError m) =>
   Handle m ->
   RegisterReq ->
   m JwtHeader
@@ -123,78 +111,17 @@ register Handle{..} req = do
           , userPassword = hashedPassword
           , userCreatedAt = curTime
           }
-  _ <- liftMaybe loginAlreadyTaken $ _addToDb user
+  _ <- liftMaybe LoginAlreadyTaken $ _addToDb user
   setCookie _setCookie user
 
-throw400 :: String -> ServerError
-throw400 err =
-  err400
-    { errReasonPhrase = err
-    }
-
-type StartLogMessage = Text
-type EndLogMessage = Text
-type ErrorLogMessage = Text
-
-withDebugLog ::
-  (MonadLogger m) =>
-  StartLogMessage ->
-  m a ->
-  EndLogMessage ->
-  m a
-withDebugLog s m e = do
-  logDebugN s
-  res <- m
-  logDebugN e
-  pure res
-
-maybeWithLog ::
-  (MonadLogger m) =>
-  StartLogMessage ->
-  m (Maybe a) ->
-  ErrorLogMessage ->
-  EndLogMessage ->
-  m (Maybe a)
-maybeWithLog startM action errM endM = do
-  logDebugN startM
-  action >>= \case
-    Nothing -> logDebugN errM >> pure Nothing
-    Just x -> logDebugN endM >> pure $ Just x
-
-handleWithLog ::
-  (MonadError ServerError m, MonadLogger m) =>
-  Handle m ->
-  Handle m
-handleWithLog h =
-  Handle
-    { _generateSalt =
-        withDebugLog
-          "generating salt"
-          (_generateSalt h)
-          "salt generated"
-    , _currentTime =
-        withDebugLog
-          "getting current time"
-          (_currentTime h)
-          "current time get"
-    , _hashPassword =
-        withDebugLog
-          "hashing password time"
-          (_hashPassword h)
-          "password hashed"
-    , _addToDb = undefined
-    , _getUser = undefined
-    , _setCookie = undefined
-    }
-
 signIn ::
-  (MonadError ServerError m) =>
+  (MonadError AuthError m) =>
   Handle m ->
   LoginReq ->
   m JwtHeader
 signIn Handle{..} req = do
   ValidCred{..} <- liftEither $ getValidCreds req
-  user <- liftMaybe badLoginOrPassword $ _getUser login
+  user <- liftMaybe CannotAuth $ _getUser login
   let passwordToCheck = _hashPassword (encodeUtf8 password) (userSalt user)
-  when (userPassword user /= passwordToCheck) (throwError badLoginOrPassword)
+  when (userPassword user /= passwordToCheck) (throwError CannotAuth)
   setCookie _setCookie user

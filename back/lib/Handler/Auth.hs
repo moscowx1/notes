@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -10,24 +11,25 @@ import Control.Monad.Except (
   ExceptT (..),
   MonadIO (liftIO),
   MonadTrans (lift),
+  withExceptT,
  )
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
 import Dto.Auth (LoginReq, RegisterReq)
-import Logic.Auth (Handle (..), JwtHeaderSetter)
+import Logic.Auth (AuthError (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
-import Servant (Handler (Handler), ServerError)
+import Servant (Handler (Handler), ServerError (errReasonPhrase), err400, err401, err409, err500)
 import Types (SqlRuner)
 
 handle ::
   SqlRuner ->
   Config ->
-  JwtHeaderSetter IO ->
-  Handle (ExceptT ServerError IO)
+  LA.JwtHeaderSetter IO ->
+  LA.Handle (ExceptT AuthError IO)
 handle sql Config{..} setCookie =
-  Handle
+  LA.Handle
     { _generateSalt = liftIO $ getEntropy _saltLength
     , _currentTime = liftIO getCurrentTime
     , _hashPassword =
@@ -41,15 +43,27 @@ handle sql Config{..} setCookie =
     , _setCookie = liftIO . setCookie
     }
 
+withPhrase :: ServerError -> String -> ServerError
+withPhrase err phrase = err{errReasonPhrase = phrase}
+
+mapper :: LA.AuthError -> ServerError
+mapper = \case
+  InvalidLogin -> withPhrase err401 "invalid login"
+  InvalidPassword -> withPhrase err401 "invalid password"
+  LoginAlreadyTaken -> withPhrase err409 "login already taken"
+  CannotAuth -> withPhrase err400 "login or password didn`t matched"
+  ErrorSettingCookie -> err500
+
 signIn ::
   SqlRuner ->
   Config ->
-  JwtHeaderSetter IO ->
+  LA.JwtHeaderSetter IO ->
   LoginReq ->
   Handler JwtHeader
-signIn runer config jwtSetter = Handler . LA.signIn h
+signIn runer config jwtSetter = Handler . signIn' h
  where
   h = handle runer config jwtSetter
+  signIn' h' r = withExceptT mapper (LA.signIn h' r)
 
 register ::
   SqlRuner ->
@@ -57,6 +71,7 @@ register ::
   JwtHeaderSetter IO ->
   RegisterReq ->
   Handler JwtHeader
-register runer config jwtSet = Handler . LA.register h
+register runer config jwtSet = Handler . register' h
  where
   h = handle runer config jwtSet
+  register' h' r = withExceptT mapper (LA.register h' r)
