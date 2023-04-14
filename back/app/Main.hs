@@ -30,6 +30,7 @@ import Database.Persist.Postgresql (
 import Handler.Auth (register, signIn)
 
 import JwtSupport ()
+import Logger (runAppLoggingT)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (
@@ -49,7 +50,8 @@ import Types (SqlRuner)
 
 main :: IO ()
 main = do
-  c <- eitherDecodeFileStrict "config.json" >>= \case
+  c <-
+    eitherDecodeFileStrict "config.json" >>= \case
       Left e -> error e
       Right x -> pure x
   jwk <-
@@ -68,7 +70,16 @@ main = do
 
   runServer jwk c pool =
     liftIO $
-      run (_port c) (corsMiddleware . logStdoutDev $ server jwk c (runNoLoggingT . (`runSqlPool` pool)))
+      run
+        (_port c)
+        ( corsMiddleware . logStdoutDev $
+            server
+              jwk
+              c
+              ( runNoLoggingT
+                  . (`runSqlPool` pool)
+              )
+        )
 
 server ::
   JWK ->

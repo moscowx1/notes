@@ -7,10 +7,10 @@ module Types (
   HashedPassword,
   SqlBack,
   SqlBackT,
-  SqlRuner
+  SqlRuner,
 ) where
 
-import Control.Monad.Logger (NoLoggingT)
+import Control.Monad.Logger (LoggingT, NoLoggingT)
 import Control.Monad.Reader (ReaderT)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
