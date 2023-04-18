@@ -14,7 +14,7 @@ import Control.Monad.Except (
   withExceptT,
  )
 import Control.Monad.Logger (LoggingT (LoggingT))
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (ReaderT (ReaderT), runReaderT)
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
@@ -79,12 +79,11 @@ signIn ::
   LA.JwtHeaderSetter IO ->
   LoginReq ->
   Handler JwtHeader
-signIn runer fp config jwtSetter = Handler . runAppLoggingT fp undefined
+signIn runer fp config jwtSetter = Handler . z'
  where
-  z r = runAppLoggingT fp $ runReaderT undefined $ withExceptT mapper (LA.signIn r)
-  z' r = runReaderT undefined $ withExceptT mapper $ runAppLoggingT fp (LA.signIn r)
+  z' r = runReaderT (lift h') $ withExceptT mapper $ runAppLoggingT fp (LA.signIn r)
 
-  h' = runAppLoggingT fp $ handle' runer config jwtSetter
+  h' = handle' runer config jwtSetter
 
 -- h = handle' runer config jwtSetter
 

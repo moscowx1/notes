@@ -6,13 +6,13 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Logic.Auth (
   AuthError (..),
   Handle (..),
   signIn,
   register,
-  register',
   JwtHeaderSetter,
 ) where
 
@@ -77,13 +77,12 @@ getValidCreds cred = do
   pure ValidCred{login = l, password = p}
 
 setCookie ::
-  (MonadError AuthError m) =>
   JwtHeaderSetter m ->
   User ->
-  m JwtHeader
+  Logic m JwtHeader
 setCookie cookieSetter user = do
   let payload = Payload{role = UserRole, login = userLogin user}
-  cookieSetter payload >>= \case
+  lift $ cookieSetter payload >>= \case
     Nothing -> throwError ErrorSettingCookie
     Just c -> pure $ c NoContent
 
@@ -94,29 +93,9 @@ liftMaybe err r = do
     Nothing -> throwError err
     Just x -> pure x
 
-register ::
-  (MonadError AuthError m) =>
-  Handle m ->
-  RegisterReq ->
-  m JwtHeader
-register Handle{..} req = do
-  ValidCred{..} <- liftEither $ getValidCreds req
-  salt <- _generateSalt
-  curTime <- _currentTime
-  let hashedPassword = _hashPassword (encodeUtf8 password) salt
-  let user =
-        User
-          { userLogin = login
-          , userSalt = salt
-          , userPassword = hashedPassword
-          , userCreatedAt = curTime
-          }
-  _ <- liftMaybe LoginAlreadyTaken $ _addToDb user
-  setCookie _setCookie user
+type Logic m a = (MonadLogger m, MonadError AuthError m) => ReaderT (Handle m) m a
 
-type ApiLogic m = (MonadLogger m, MonadError AuthError m, MonadReader (Handle m) m)
-
-validateLogin' :: (ApiLogic m) => Text -> m Login
+validateLogin' :: Text -> Logic m Login
 validateLogin' login' =
   if T.length login' > 3
     then pure login'
@@ -124,7 +103,7 @@ validateLogin' login' =
       logErrorN "invalid login"
       throwError InvalidLogin
 
-validatePassword' :: (ApiLogic m) => Text -> m Text
+validatePassword' :: Text -> Logic m Text
 validatePassword' password =
   if T.length password > 5
     then pure password
@@ -133,21 +112,19 @@ validatePassword' password =
       throwError InvalidPassword
 
 getValidCreds' ::
-  (ApiLogic m) =>
   Credential ->
-  m ValidCred
+  (Logic m) ValidCred
 getValidCreds' Credential{..} =
   validateLogin' login
     >> validatePassword' password
     >> pure ValidCred{..}
 
 getUser ::
-  (ApiLogic m) =>
   Login ->
-  m User
+  Logic m User
 getUser login = do
   logInfoN "getting user by login"
-  getter <- asks _getUser
+  getter <- lift $ asks _getUser
   res <- getter login
   case res of
     Nothing -> do
@@ -157,10 +134,9 @@ getUser login = do
       pure x
 
 hashPwd ::
-  (ApiLogic m) =>
   Text ->
   Salt ->
-  m HashedPassword
+  (Logic m) HashedPassword
 hashPwd pwd salt = do
   logDebugN "hashing input password"
   hashAlg <- asks _hashPassword
@@ -168,47 +144,36 @@ hashPwd pwd salt = do
   let pwdBS = encodeUtf8 pwd
   pure $ hashAlg pwdBS salt
 
-setCookie' ::
-  (ApiLogic m) =>
-  User ->
-  m JwtHeader
+setCookie' :: User -> Logic m JwtHeader
 setCookie' user = do
   let payload = Payload{role = UserRole, login = userLogin user}
-  setter <- asks _setCookie
+  setter <- lift $ asks _setCookie
   setter payload >>= \case
     Nothing -> throwError ErrorSettingCookie
     Just c -> pure $ c NoContent
 
-generateSalt :: (ApiLogic m) => m Salt
+generateSalt :: Logic m Salt
 generateSalt = do
   logDebugN "generating salt"
   join $ asks _generateSalt
 
-getTime :: (ApiLogic m) => m UTCTime
+getTime :: Logic m UTCTime
 getTime = do
   logDebugN "generating time"
-  join $ asks _currentTime
+  join $ lift $ asks _currentTime
 
-addToDb :: (ApiLogic m) => User -> m User
+addToDb :: User -> Logic m User
 addToDb u = do
   logInfoN "adding user to db"
-  asks _addToDb >>= ($ u) >>= \case
+  lift $ asks _addToDb >>= ($ u) >>= \case
     Nothing -> do
       logErrorN "error adding user to db"
       throwError LoginAlreadyTaken
     Just x -> pure x
 
--- signIn ::
---  (MonadError AuthError m) =>
---  Handle m ->
---  LoginReq ->
---  m JwtHeader
--- signIn h = undefined
-
 signIn ::
-  (ApiLogic m) =>
   LoginReq ->
-  m JwtHeader
+  (Logic m) JwtHeader
 signIn req = do
   logDebugN "validating user"
   ValidCred{..} <- getValidCreds' req
@@ -219,11 +184,10 @@ signIn req = do
     (logErrorN "invalid password" >> throwError CannotAuth)
   setCookie' user
 
-register' ::
-  (ApiLogic m) =>
+register ::
   RegisterReq ->
-  m JwtHeader
-register' req = do
+  (Logic m) JwtHeader
+register req = do
   ValidCred{..} <- getValidCreds' req
   userSalt <- generateSalt
   userCreatedAt <- getTime
