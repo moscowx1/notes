@@ -11,7 +11,7 @@ import Control.Monad.Except (
   ExceptT (..),
   MonadIO (liftIO),
   MonadTrans (lift),
-  withExceptT,
+  withExceptT, MonadError (throwError),
  )
 import Control.Monad.Logger (LoggingT (LoggingT))
 import Control.Monad.Reader (ReaderT (ReaderT), runReaderT)
@@ -23,15 +23,17 @@ import Dto.Auth (LoginReq, RegisterReq)
 import Logger (runAppLoggingT)
 import Logic.Auth (AuthError (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
+import qualified Handler.Logger as Logger
 import Servant (Handler (Handler), ServerError (errReasonPhrase), err400, err401, err409, err500)
 import Types (SqlRuner)
 
 handle ::
   SqlRuner ->
+  Logger.Handle (ExceptT AuthError IO) ->
   Config ->
   LA.JwtHeaderSetter IO ->
   LA.Handle (ExceptT AuthError IO)
-handle sql Config{..} setCookie =
+handle sql l Config{..} setCookie =
   LA.Handle
     { _generateSalt = liftIO $ getEntropy _saltLength
     , _currentTime = liftIO getCurrentTime
@@ -44,6 +46,8 @@ handle sql Config{..} setCookie =
     , _addToDb = lift . sql . addUser
     , _getUser = lift . sql . userByLogin
     , _setCookie = liftIO . setCookie
+    , _throw = throwError
+    , _logger = l
     }
 
 handle' sql Config{..} setCookie =
@@ -59,6 +63,8 @@ handle' sql Config{..} setCookie =
     , _addToDb = lift . sql . addUser
     , _getUser = lift . sql . userByLogin
     , _setCookie = liftIO . setCookie
+    , _logger = undefined
+    , _throw = throwError
     }
 
 withPhrase :: ServerError -> String -> ServerError
@@ -72,9 +78,9 @@ mapper = \case
   CannotAuth -> withPhrase err400 "login or password didn`t matched"
   ErrorSettingCookie -> err500
 
-signIn ::
+{- signIn ::
   SqlRuner ->
-  FilePath ->
+
   Config ->
   LA.JwtHeaderSetter IO ->
   LoginReq ->
@@ -82,12 +88,26 @@ signIn ::
 signIn runer fp config jwtSetter = Handler . z'
  where
   z' r = runReaderT (lift h') $ withExceptT mapper $ runAppLoggingT fp (LA.signIn r)
-
-  h' = handle' runer config jwtSetter
+  h' = handle' runer config jwtSetter -}
 
 -- h = handle' runer config jwtSetter
 
+
+signIn = undefined
+
 register ::
+  SqlRuner ->
+  Logger.Handle (ExceptT AuthError IO) ->
+  Config ->
+  JwtHeaderSetter IO ->
+  RegisterReq ->
+  Handler JwtHeader
+register r l c jwtSet = Handler . reg'
+  where 
+    h = handle r l c jwtSet
+    reg' r' = withExceptT mapper (LA.register' r' h)
+
+{- register ::
   SqlRuner ->
   Config ->
   JwtHeaderSetter IO ->
@@ -107,4 +127,4 @@ register' ::
 register' runer config jwtSet = Handler . register'
  where
   h = handle runer config jwtSet
-  register' r = withExceptT mapper (LA.register h r)
+  register' r = withExceptT mapper (LA.register h r) -}

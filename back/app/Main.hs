@@ -47,6 +47,7 @@ import Servant.Auth.Server (
  )
 import Servant.Server.Generic (genericServeTWithContext)
 import Types (SqlRuner)
+import Handler.Logger (mkLogger)
 
 main :: IO ()
 main = do
@@ -95,13 +96,14 @@ server jwk conf runer =
           , cookieXsrfSetting = Nothing
           }
       setCookie = acceptLogin cookieSettings jwtSettings
+      logger = mkLogger $ _logFile conf
    in genericServeTWithContext
         id
         Api
           { _auth =
               Auth
-                { _signIn = signIn runer (_authConfig conf) setCookie
-                , _register = register runer (_authConfig conf) setCookie
+                { _signIn = undefined -- signIn runer (_authConfig conf) setCookie
+                , _register = register runer logger (_authConfig conf) setCookie
                 }
           , _notes = \p -> do
               Notes

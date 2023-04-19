@@ -13,6 +13,7 @@ module Logic.Auth (
   Handle (..),
   signIn,
   register,
+  register',
   JwtHeaderSetter,
 ) where
 
@@ -23,6 +24,8 @@ import Control.Monad.Logger (MonadLogger, logDebugN, logErrorN, logInfoN)
 import Control.Monad.Reader (MonadReader, MonadTrans (lift), ReaderT (ReaderT, runReaderT), asks)
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Handler.Logger as Logger
+import Handler.Logger (_logInfo)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
@@ -51,12 +54,38 @@ data Handle m = Handle
   , _addToDb :: User -> m (Maybe User)
   , _getUser :: Login -> m (Maybe User)
   , _setCookie :: JwtHeaderSetter m
+  , _throw :: AuthError -> m ()
+  , _logger :: Logger.Handle m
   }
 
 data ValidCred = ValidCred
   { login :: Text
   , password :: Text
   }
+
+login'' :: Text -> Either AuthError Login
+login'' l =
+  if T.length l > 3
+    then Right l
+    else Left InvalidLogin
+
+password'' :: Text -> Either AuthError Text
+password'' p  =
+  if T.length p > 5
+    then Right p
+    else Left InvalidPassword
+
+creds :: (MonadError AuthError m) => Credential -> m ValidCred
+creds cred = do
+  l <- lift $ login'' (Dto.Auth.login cred)
+  p <- lift $ password'' (Dto.Auth.password cred)
+  pure ValidCred{login = l, password = p}
+
+register' :: (Monad m) => RegisterReq -> Handle m -> m JwtHeader
+register' req Handle{..}= do
+  _logInfo _logger "kek"
+  _throw InvalidLogin
+  undefined
 
 validateLogin :: Text -> Either AuthError Login
 validateLogin login' =
@@ -124,7 +153,7 @@ getUser ::
   Logic m User
 getUser login = do
   logInfoN "getting user by login"
-  getter <- lift $ asks _getUser
+  getter <- undefined -- lift $ asks _getUser
   res <- getter login
   case res of
     Nothing -> do
@@ -147,7 +176,7 @@ hashPwd pwd salt = do
 setCookie' :: User -> Logic m JwtHeader
 setCookie' user = do
   let payload = Payload{role = UserRole, login = userLogin user}
-  setter <- lift $ asks _setCookie
+  setter <- lift $ undefined -- asks _setCookie
   setter payload >>= \case
     Nothing -> throwError ErrorSettingCookie
     Just c -> pure $ c NoContent
@@ -155,17 +184,20 @@ setCookie' user = do
 generateSalt :: Logic m Salt
 generateSalt = do
   logDebugN "generating salt"
-  join $ asks _generateSalt
+  pure undefined
+  --join $ asks _generateSalt
 
 getTime :: Logic m UTCTime
 getTime = do
   logDebugN "generating time"
-  join $ lift $ asks _currentTime
+  join $ lift undefined -- asks _currentTime
 
 addToDb :: User -> Logic m User
 addToDb u = do
   logInfoN "adding user to db"
-  lift $ asks _addToDb >>= ($ u) >>= \case
+  lift
+    $ undefined -- asks _addToDb >>= ($ u) 
+      >>= \case
     Nothing -> do
       logErrorN "error adding user to db"
       throwError LoginAlreadyTaken
@@ -195,3 +227,4 @@ register req = do
   let userLogin = login
   let user = User{..}
   addToDb user >>= setCookie'
+

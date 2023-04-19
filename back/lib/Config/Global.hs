@@ -15,6 +15,7 @@ data Config = Config
   , _poolConnections :: Int
   , _port :: Int
   , _authConfig :: A.Config
+  , _logFile :: FilePath
   }
   deriving (Show, Eq, Generic)
 
