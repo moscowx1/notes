@@ -22,12 +22,12 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
-import DataAccess.Data (User (..))
+import DataAccess.Data (User (..), HashedPassword, Salt, Login)
 import Dto.Auth (Credential (Credential, login, password), LoginReq, RegisterReq)
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
 import Servant.API (NoContent (NoContent))
-import Types (HashedPassword, Login, Password, Salt)
+import Data.ByteString (ByteString)
 
 type JwtHeaderSetter m =
   Payload ->
@@ -53,6 +53,8 @@ data Handle m = Handle
   , _throw :: forall a. AuthError -> m a -- TODO: checkout better solution
   , _logger :: Logger.Handle m
   }
+
+type Password = ByteString
 
 data ValidCred = ValidCred
   { login :: Text

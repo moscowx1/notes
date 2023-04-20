@@ -21,7 +21,11 @@ import Database.Persist.TH (
   share,
   sqlSettings,
  )
-import Types (HashedPassword, Login, Salt)
+import Data.ByteString (ByteString)
+
+type Salt = ByteString
+type Login = Text
+type HashedPassword = ByteString
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]

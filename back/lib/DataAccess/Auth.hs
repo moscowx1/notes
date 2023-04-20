@@ -5,10 +5,9 @@
 module DataAccess.Auth (addUser, userByLogin) where
 
 import Control.Monad.Reader (MonadIO)
-import DataAccess.Data (EntityField (UserLogin), User)
+import DataAccess.Data (EntityField (UserLogin), User, Login)
 import Database.Esqueleto.Experimental (SqlPersistT, (==.), (^.))
 import qualified Database.Esqueleto.Experimental as E
-import Types (Login)
 
 addUser ::
   MonadIO m =>
