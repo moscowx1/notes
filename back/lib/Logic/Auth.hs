@@ -13,19 +13,15 @@ module Logic.Auth (
   Handle (..),
   signIn,
   register,
-  register',
   JwtHeaderSetter,
 ) where
 
 import Api (JwtHeader, Payload (..), Role (UserRole))
-import Control.Monad (join, when)
-import Control.Monad.Error.Class (MonadError (throwError), liftEither)
-import Control.Monad.Logger (MonadLogger, logDebugN, logErrorN, logInfoN)
-import Control.Monad.Reader (MonadReader, MonadTrans (lift), ReaderT (ReaderT, runReaderT), asks)
+import Control.Monad (when)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Handler.Logger as Logger
-import Handler.Logger (_logInfo)
+import Handler.Logger (_logInfo, _logError, _logDebug)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
@@ -54,7 +50,7 @@ data Handle m = Handle
   , _addToDb :: User -> m (Maybe User)
   , _getUser :: Login -> m (Maybe User)
   , _setCookie :: JwtHeaderSetter m
-  , _throw :: AuthError -> m ()
+  , _throw :: forall a. AuthError -> m a -- TODO: checkout better solution
   , _logger :: Logger.Handle m
   }
 
@@ -63,168 +59,102 @@ data ValidCred = ValidCred
   , password :: Text
   }
 
-login'' :: Text -> Either AuthError Login
-login'' l =
-  if T.length l > 3
-    then Right l
-    else Left InvalidLogin
+creds :: (Monad m) => Handle m -> Credential -> m ValidCred
+creds Handle{..} Credential{..} = do
+  _logDebug _logger "validating user credentials"
 
-password'' :: Text -> Either AuthError Text
-password'' p  =
-  if T.length p > 5
-    then Right p
-    else Left InvalidPassword
+  when (T.length login <= 3) 
+    (_logError _logger "invalid user login" >> _throw InvalidLogin)
 
-creds :: (MonadError AuthError m) => Credential -> m ValidCred
-creds cred = do
-  l <- lift $ login'' (Dto.Auth.login cred)
-  p <- lift $ password'' (Dto.Auth.password cred)
-  pure ValidCred{login = l, password = p}
+  when (T.length password <= 5)
+    (_logError _logger "invalid user password" >> _throw InvalidPassword)
 
-register' :: (Monad m) => RegisterReq -> Handle m -> m JwtHeader
-register' req Handle{..}= do
-  _logInfo _logger "kek"
-  _throw InvalidLogin
-  undefined
+  pure ValidCred{..}
 
-validateLogin :: Text -> Either AuthError Login
-validateLogin login' =
-  if T.length login' > 3
-    then Right login'
-    else Left InvalidLogin
+generateSalt :: (Monad m) => Handle m -> m Salt
+generateSalt Handle {..} = do
+  _logInfo _logger "generating salt"
+  _generateSalt
 
-validatePassword :: Text -> Either AuthError Text
-validatePassword password =
-  if T.length password > 5
-    then Right password
-    else Left InvalidPassword
-
-getValidCreds :: Credential -> Either AuthError ValidCred
-getValidCreds cred = do
-  l <- validateLogin (Dto.Auth.login cred)
-  p <- validatePassword (Dto.Auth.password cred)
-  pure ValidCred{login = l, password = p}
-
-setCookie ::
-  JwtHeaderSetter m ->
-  User ->
-  Logic m JwtHeader
-setCookie cookieSetter user = do
-  let payload = Payload{role = UserRole, login = userLogin user}
-  lift $ cookieSetter payload >>= \case
-    Nothing -> throwError ErrorSettingCookie
-    Just c -> pure $ c NoContent
-
-liftMaybe :: (MonadError e m) => e -> m (Maybe a) -> m a
-liftMaybe err r = do
-  r' <- r
-  case r' of
-    Nothing -> throwError err
-    Just x -> pure x
-
-type Logic m a = (MonadLogger m, MonadError AuthError m) => ReaderT (Handle m) m a
-
-validateLogin' :: Text -> Logic m Login
-validateLogin' login' =
-  if T.length login' > 3
-    then pure login'
-    else do
-      logErrorN "invalid login"
-      throwError InvalidLogin
-
-validatePassword' :: Text -> Logic m Text
-validatePassword' password =
-  if T.length password > 5
-    then pure password
-    else do
-      logErrorN "invalid password"
-      throwError InvalidPassword
-
-getValidCreds' ::
-  Credential ->
-  (Logic m) ValidCred
-getValidCreds' Credential{..} =
-  validateLogin' login
-    >> validatePassword' password
-    >> pure ValidCred{..}
-
-getUser ::
-  Login ->
-  Logic m User
-getUser login = do
-  logInfoN "getting user by login"
-  getter <- undefined -- lift $ asks _getUser
-  res <- getter login
-  case res of
-    Nothing -> do
-      logErrorN $ "user with login'" <> login <> "' not found"
-      throwError CannotAuth
-    Just x -> do
-      pure x
+getTime :: (Monad m) => Handle m -> m UTCTime
+getTime Handle{..}= do
+  _logDebug _logger "getting current time"
+  _currentTime
 
 hashPwd ::
+  (Monad m) =>
+  Handle m ->
   Text ->
   Salt ->
-  (Logic m) HashedPassword
-hashPwd pwd salt = do
-  logDebugN "hashing input password"
-  hashAlg <- asks _hashPassword
-  logInfoN "converting password to bs"
+  m HashedPassword
+hashPwd Handle{..} pwd salt = do
+  _logDebug _logger "converting password to bs"
   let pwdBS = encodeUtf8 pwd
-  pure $ hashAlg pwdBS salt
+  _logDebug _logger "hashing input password"
+  pure $ _hashPassword pwdBS salt
 
-setCookie' :: User -> Logic m JwtHeader
-setCookie' user = do
+addToDb :: 
+  (Monad m) => 
+  Handle m ->
+  User -> 
+  m User
+addToDb Handle{..} u = do
+  _logInfo _logger "adding user to database"
+  _addToDb u >>= \case
+    Nothing -> do
+      _logError _logger "error adding user to database"
+      _throw LoginAlreadyTaken
+    Just x -> pure x
+
+setCookie ::
+  (Monad m) =>
+  Handle m ->
+  User -> 
+  m JwtHeader
+setCookie Handle{..} user = do
+  _logDebug _logger "setting cookie"
   let payload = Payload{role = UserRole, login = userLogin user}
-  setter <- lift $ undefined -- asks _setCookie
-  setter payload >>= \case
-    Nothing -> throwError ErrorSettingCookie
+  _setCookie payload >>= \case
+    Nothing -> _throw ErrorSettingCookie
     Just c -> pure $ c NoContent
 
-generateSalt :: Logic m Salt
-generateSalt = do
-  logDebugN "generating salt"
-  pure undefined
-  --join $ asks _generateSalt
+register :: 
+  (Monad m) => 
+  Handle m ->
+  RegisterReq -> 
+  m JwtHeader
+register h req = do
+  ValidCred{..} <- creds h req
+  userSalt <- generateSalt h
+  userCreatedAt <- getTime h
+  userPassword <- hashPwd h password userSalt
+  let userLogin = login
+  let user = User{..}
+  addToDb h user >>= setCookie h
 
-getTime :: Logic m UTCTime
-getTime = do
-  logDebugN "generating time"
-  join $ lift undefined -- asks _currentTime
-
-addToDb :: User -> Logic m User
-addToDb u = do
-  logInfoN "adding user to db"
-  lift
-    $ undefined -- asks _addToDb >>= ($ u) 
-      >>= \case
+getUser ::
+  (Monad m) =>
+  Handle m ->
+  Login ->
+  m User
+getUser Handle{..} login = do
+  _logInfo _logger "getting user by login"
+  _getUser login >>= \case
     Nothing -> do
-      logErrorN "error adding user to db"
-      throwError LoginAlreadyTaken
+      _logError _logger $ "user with login '" <> login <> "' not found"
+      _throw CannotAuth
     Just x -> pure x
 
 signIn ::
+  (Monad m) =>
+  Handle m ->
   LoginReq ->
-  (Logic m) JwtHeader
-signIn req = do
-  logDebugN "validating user"
-  ValidCred{..} <- getValidCreds' req
-  user <- getUser login
-  pwdToCheck <- hashPwd password (userSalt user)
-  when
-    (userPassword user /= pwdToCheck)
-    (logErrorN "invalid password" >> throwError CannotAuth)
-  setCookie' user
-
-register ::
-  RegisterReq ->
-  (Logic m) JwtHeader
-register req = do
-  ValidCred{..} <- getValidCreds' req
-  userSalt <- generateSalt
-  userCreatedAt <- getTime
-  userPassword <- hashPwd password userSalt
-  let userLogin = login
-  let user = User{..}
-  addToDb user >>= setCookie'
+  m JwtHeader
+signIn h@Handle{..} req = do
+  ValidCred{..} <- creds h req
+  user <- getUser h login
+  pwdToCheck <- hashPwd h password (userSalt user)
+  when (userPassword user /= pwdToCheck)
+    (_logError _logger "password did't matched" >> _throw CannotAuth)
+  setCookie h user
 

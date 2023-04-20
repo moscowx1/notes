@@ -30,7 +30,6 @@ import Database.Persist.Postgresql (
 import Handler.Auth (register, signIn)
 
 import JwtSupport ()
-import Logger (runAppLoggingT)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (
@@ -102,7 +101,7 @@ server jwk conf runer =
         Api
           { _auth =
               Auth
-                { _signIn = undefined -- signIn runer (_authConfig conf) setCookie
+                { _signIn = signIn runer logger (_authConfig conf) setCookie
                 , _register = register runer logger (_authConfig conf) setCookie
                 }
           , _notes = \p -> do

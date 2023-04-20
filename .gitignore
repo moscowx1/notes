@@ -1,5 +1,6 @@
 # back
 dist-newstyle/
+back/logs.txt
 
 config.json
 jwk.json

@@ -3,7 +3,6 @@
 module Handler.Logger (Handle(..), mkLogger) where
 
 import Control.Monad.Cont (MonadIO (liftIO))
-import Data.Functor (($>))
 import Data.Time (getCurrentTime)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -30,11 +29,13 @@ mkMsg lvl msg = do
     , "\n"
     ]
 
+-- TODO: need to optimize or use library
+-- api works x2 slower
 log' :: FilePath -> LogLvl -> Text -> IO ()
 log' fn lvl msg = do
-  msg <- mkMsg lvl msg
-  _ <- liftIO $ TIO.appendFile fn msg
-  liftIO $ TIO.putStr msg
+  msg' <- mkMsg lvl msg
+  _ <- liftIO $ TIO.appendFile fn msg'
+  liftIO $ TIO.putStr msg'
 
 mkLogger :: (MonadIO m) => FilePath -> Handle m
 mkLogger fn = Handle 
