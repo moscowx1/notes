@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Handler.Logger (Handle(..), mkLogger) where
+module Handle.Logger (Handle(..), mkLogger) where
 
 import Control.Monad.Cont (MonadIO (liftIO))
 import Data.Time (getCurrentTime)

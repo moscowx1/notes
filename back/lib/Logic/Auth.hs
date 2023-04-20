@@ -20,8 +20,8 @@ import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Handler.Logger as Logger
-import Handler.Logger (_logInfo, _logError, _logDebug)
+import qualified Handle.Logger as Logger
+import Handle.Logger (_logInfo, _logError, _logDebug)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))

@@ -3,7 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Handler.Auth (register, signIn) where
+module Handle.Auth (register, signIn) where
 
 import Api (JwtHeader)
 import Config.Auth (Config (..))
@@ -20,7 +20,7 @@ import DataAccess.Auth (addUser, userByLogin)
 import Dto.Auth (LoginReq, RegisterReq)
 import Logic.Auth (AuthError (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
-import qualified Handler.Logger as Logger
+import qualified Handle.Logger as Logger
 import Servant (Handler (Handler), ServerError (errReasonPhrase), err400, err401, err409, err500)
 import Types (SqlRuner)
 

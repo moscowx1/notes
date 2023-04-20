@@ -19,9 +19,8 @@ library
       DataAccess.Auth
       DataAccess.Data
       Dto.Auth
-      Handler.Auth
-      Handler.Logger
-      Impl.Auth
+      Handle.Auth
+      Handle.Logger
       Logic.Auth
       Types
   other-modules:

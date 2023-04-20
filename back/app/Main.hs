@@ -27,7 +27,7 @@ import Database.Persist.Postgresql (
   runSqlPool,
   withPostgresqlPool,
  )
-import Handler.Auth (register, signIn)
+import Handle.Auth (register, signIn)
 
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
@@ -46,7 +46,7 @@ import Servant.Auth.Server (
  )
 import Servant.Server.Generic (genericServeTWithContext)
 import Types (SqlRuner)
-import Handler.Logger (mkLogger)
+import Handle.Logger (mkLogger)
 
 main :: IO ()
 main = do
