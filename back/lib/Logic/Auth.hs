@@ -40,8 +40,9 @@ data AuthError
   = InvalidLogin
   | InvalidPassword
   | LoginAlreadyTaken
-  | CannotAuth
   | ErrorSettingCookie
+  | WrongPassword
+  | UserNotFound
 
 data Handle m = Handle
   { _generateSalt :: m Salt
@@ -106,7 +107,7 @@ addToDb Handle{..} u = do
   _logInfo _logger "adding user to database"
   _addToDb u >>= \case
     Nothing -> do
-      _logError _logger "error adding user to database"
+      _logError _logger "login alrady taken"
       _throw LoginAlreadyTaken
     Just x -> pure x
 
@@ -146,7 +147,7 @@ getUser Handle{..} login = do
   _getUser login >>= \case
     Nothing -> do
       _logError _logger $ "user with login '" <> login <> "' not found"
-      _throw CannotAuth
+      _throw UserNotFound
     Just x -> pure x
 
 signIn ::
@@ -160,5 +161,5 @@ signIn h@Handle{..} req = do
   pwdToCheck <- hashPwd h password (userSalt user)
   when
     (userPassword user /= pwdToCheck)
-    (_logError _logger "password did't matched" >> _throw CannotAuth)
+    (_logError _logger "password did't matched" >> _throw WrongPassword)
   setCookie h user

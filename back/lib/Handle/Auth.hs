@@ -52,12 +52,15 @@ withPhrase :: ServerError -> String -> ServerError
 withPhrase err phrase = err{errReasonPhrase = phrase}
 
 mapper :: LA.AuthError -> ServerError
-mapper = \case
-  InvalidLogin -> withPhrase err401 "invalid login"
-  InvalidPassword -> withPhrase err401 "invalid password"
-  LoginAlreadyTaken -> withPhrase err409 "login already taken"
-  CannotAuth -> withPhrase err400 "login or password didn`t matched"
-  ErrorSettingCookie -> err500
+mapper a = case a of
+   InvalidLogin -> withPhrase err401 "invalid login"
+   InvalidPassword -> withPhrase err401 "invalid password"
+   LoginAlreadyTaken -> withPhrase err409 "login already taken"
+   ErrorSettingCookie -> err500
+   WrongPassword -> e400
+   UserNotFound -> e400
+  where
+    e400 = withPhrase err400 "login or password didn`t matched"
 
 signIn ::
   SqlRuner ->
