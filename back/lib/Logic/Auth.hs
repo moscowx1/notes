@@ -5,8 +5,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Logic.Auth (
   AuthError (..),
@@ -20,12 +20,12 @@ import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Handle.Logger as Logger
-import Handle.Logger (_logInfo, _logError, _logDebug)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (User (..))
 import Dto.Auth (Credential (Credential, login, password), LoginReq, RegisterReq)
+import Handle.Logger (_logDebug, _logError, _logInfo)
+import qualified Handle.Logger as Logger
 import Servant.API (NoContent (NoContent))
 import Types (HashedPassword, Login, Password, Salt)
 
@@ -63,21 +63,23 @@ creds :: (Monad m) => Handle m -> Credential -> m ValidCred
 creds Handle{..} Credential{..} = do
   _logDebug _logger "validating user credentials"
 
-  when (T.length login <= 3) 
+  when
+    (T.length login <= 3)
     (_logError _logger "invalid user login" >> _throw InvalidLogin)
 
-  when (T.length password <= 5)
+  when
+    (T.length password <= 5)
     (_logError _logger "invalid user password" >> _throw InvalidPassword)
 
   pure ValidCred{..}
 
 generateSalt :: (Monad m) => Handle m -> m Salt
-generateSalt Handle {..} = do
+generateSalt Handle{..} = do
   _logInfo _logger "generating salt"
   _generateSalt
 
 getTime :: (Monad m) => Handle m -> m UTCTime
-getTime Handle{..}= do
+getTime Handle{..} = do
   _logDebug _logger "getting current time"
   _currentTime
 
@@ -93,10 +95,10 @@ hashPwd Handle{..} pwd salt = do
   _logDebug _logger "hashing input password"
   pure $ _hashPassword pwdBS salt
 
-addToDb :: 
-  (Monad m) => 
+addToDb ::
+  (Monad m) =>
   Handle m ->
-  User -> 
+  User ->
   m User
 addToDb Handle{..} u = do
   _logInfo _logger "adding user to database"
@@ -109,7 +111,7 @@ addToDb Handle{..} u = do
 setCookie ::
   (Monad m) =>
   Handle m ->
-  User -> 
+  User ->
   m JwtHeader
 setCookie Handle{..} user = do
   _logDebug _logger "setting cookie"
@@ -118,10 +120,10 @@ setCookie Handle{..} user = do
     Nothing -> _throw ErrorSettingCookie
     Just c -> pure $ c NoContent
 
-register :: 
-  (Monad m) => 
+register ::
+  (Monad m) =>
   Handle m ->
-  RegisterReq -> 
+  RegisterReq ->
   m JwtHeader
 register h req = do
   ValidCred{..} <- creds h req
@@ -154,7 +156,7 @@ signIn h@Handle{..} req = do
   ValidCred{..} <- creds h req
   user <- getUser h login
   pwdToCheck <- hashPwd h password (userSalt user)
-  when (userPassword user /= pwdToCheck)
+  when
+    (userPassword user /= pwdToCheck)
     (_logError _logger "password did't matched" >> _throw CannotAuth)
   setCookie h user
-

@@ -9,18 +9,19 @@ import Api (JwtHeader)
 import Config.Auth (Config (..))
 import Control.Monad.Except (
   ExceptT (..),
+  MonadError (throwError),
   MonadIO (liftIO),
   MonadTrans (lift),
-  withExceptT, MonadError (throwError),
+  withExceptT,
  )
 import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
 import Crypto.Random.Entropy (getEntropy)
 import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
 import Dto.Auth (LoginReq, RegisterReq)
+import qualified Handle.Logger as Logger
 import Logic.Auth (AuthError (..), JwtHeaderSetter)
 import qualified Logic.Auth as LA
-import qualified Handle.Logger as Logger
 import Servant (Handler (Handler), ServerError (errReasonPhrase), err400, err401, err409, err500)
 import Types (SqlRuner)
 
@@ -66,9 +67,9 @@ signIn ::
   LoginReq ->
   Handler JwtHeader
 signIn r l c jwtSet = Handler . reg'
-  where 
-    h = handle r l c jwtSet
-    reg' = withExceptT mapper . LA.signIn h
+ where
+  h = handle r l c jwtSet
+  reg' = withExceptT mapper . LA.signIn h
 
 register ::
   SqlRuner ->
@@ -78,7 +79,6 @@ register ::
   RegisterReq ->
   Handler JwtHeader
 register r l c jwtSet = Handler . reg'
-  where 
-    h = handle r l c jwtSet
-    reg' = withExceptT mapper . LA.register h
-
+ where
+  h = handle r l c jwtSet
+  reg' = withExceptT mapper . LA.register h
