@@ -12,6 +12,7 @@
 
 module DataAccess.Data where
 
+import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Database.Persist.TH (
@@ -21,7 +22,6 @@ import Database.Persist.TH (
   share,
   sqlSettings,
  )
-import Data.ByteString (ByteString)
 
 type Salt = ByteString
 type Login = Text

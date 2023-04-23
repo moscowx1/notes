@@ -18,16 +18,16 @@ module Logic.Auth (
 
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
+import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
-import DataAccess.Data (User (..), HashedPassword, Salt, Login)
-import Dto.Auth (Credential (Credential, login, password), LoginReq, RegisterReq)
+import DataAccess.Data (HashedPassword, Login, Salt, User (..))
+import Dto.Auth (Credential (..), LoginReq, RegisterReq)
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
 import Servant.API (NoContent (NoContent))
-import Data.ByteString (ByteString)
 
 type JwtHeaderSetter m =
   Payload ->
