@@ -53,14 +53,14 @@ withPhrase err phrase = err{errReasonPhrase = phrase}
 
 mapper :: LA.AuthError -> ServerError
 mapper a = case a of
-   InvalidLogin -> withPhrase err401 "invalid login"
-   InvalidPassword -> withPhrase err401 "invalid password"
-   LoginAlreadyTaken -> withPhrase err409 "login already taken"
-   ErrorSettingCookie -> err500
-   WrongPassword -> e400
-   UserNotFound -> e400
-  where
-    e400 = withPhrase err400 "login or password didn`t matched"
+  InvalidLogin -> withPhrase err401 "invalid login"
+  InvalidPassword -> withPhrase err401 "invalid password"
+  LoginAlreadyTaken -> withPhrase err409 "login already taken"
+  ErrorSettingCookie -> err500
+  WrongPassword -> e400
+  UserNotFound -> e400
+ where
+  e400 = withPhrase err400 "login or password didn`t matched"
 
 signIn ::
   SqlRuner ->

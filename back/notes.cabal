@@ -18,10 +18,14 @@ library
       Config.Global
       DataAccess.Auth
       DataAccess.Data
+      DataAccess.Notes
       Dto.Auth
+      Dto.Notes
       Handle.Auth
       Handle.Logger
+      Handle.Notes
       Logic.Auth
+      Logic.Notes
       Types
   other-modules:
       Paths_notes
