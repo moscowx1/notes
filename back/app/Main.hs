@@ -13,7 +13,7 @@
 
 module Main (main) where
 
-import Api (Api (..), Auth (..), Notes (Notes, _get))
+import Api (Api (..), Auth (..), Notes (..))
 import Config.Global (Config (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
@@ -107,6 +107,7 @@ server jwk conf runer =
           , _notes = \p -> do
               Notes
                 { _get = liftIO $ print p >> pure "hello"
+                , _create = undefined
                 }
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

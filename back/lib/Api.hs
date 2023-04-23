@@ -61,8 +61,11 @@ data Auth routes = Auth
   }
   deriving (Generic)
 
-newtype Notes routes = Notes
+data Notes routes = Notes
   { _get ::
+      routes
+        :- Post '[PlainText] String -- TODO: change method
+  , _create ::
       routes
         :- Post '[PlainText] String
   }
