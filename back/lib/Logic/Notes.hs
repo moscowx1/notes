@@ -27,7 +27,7 @@ data Error
   | UserNotFound
 
 data Handle m = Handle
-  { _createNote :: Note -> m Bool
+  { _createNote :: Note -> m ()
   , _getUserId :: Login -> m (Maybe UserId)
   , _getNote :: NoteId -> m (Maybe Note)
   , _logger :: Logger.Handle m

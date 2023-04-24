@@ -20,7 +20,6 @@ library
       DataAccess.Data
       DataAccess.Notes
       Dto.Auth
-      Dto.Notes
       Handle.Auth
       Handle.Logger
       Handle.Notes
