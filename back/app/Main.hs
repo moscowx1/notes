@@ -29,7 +29,9 @@ import Database.Persist.Postgresql (
  )
 import Handle.Auth (register, signIn)
 
-import Handle.Logger (mkLogger)
+import Control.Monad.Except (ExceptT)
+import Handle.Logger (Handle, mkLogger)
+import Handle.Notes (createNote, getNote)
 import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
@@ -37,8 +39,11 @@ import Servant (
   Application,
   Context (EmptyContext, (:.)),
   IsSecure (Secure),
+  err401,
+  throwError,
  )
 import Servant.Auth.Server (
+  AuthResult (Authenticated),
   CookieSettings (..),
   SameSite (..),
   acceptLogin,
@@ -95,6 +100,8 @@ server jwk conf runer =
           , cookieXsrfSetting = Nothing
           }
       setCookie = acceptLogin cookieSettings jwtSettings
+
+      logger :: forall err. Handle (ExceptT err IO)
       logger = mkLogger $ _logFile conf
    in genericServeTWithContext
         id
@@ -104,10 +111,14 @@ server jwk conf runer =
                 { _signIn = signIn runer logger (_authConfig conf) setCookie
                 , _register = register runer logger (_authConfig conf) setCookie
                 }
-          , _notes = \p -> do
+          , _notes = \pay -> do
               Notes
-                { _get = liftIO $ print p >> pure "hello"
-                , _create = undefined
+                { _get = getNote runer logger
+                , _create = do
+                    case pay of
+                      Authenticated p -> createNote runer p logger
+                      _ -> undefined
+                      -- createNote runer p logger
                 }
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

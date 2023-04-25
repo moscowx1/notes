@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Handle.Logger (Handle (..), mkLogger) where
 
@@ -38,7 +39,7 @@ log' fn lvl msg = do
   _ <- liftIO $ TIO.appendFile fn msg'
   liftIO $ TIO.putStr msg'
 
-mkLogger :: (MonadIO m) => FilePath -> Handle m
+mkLogger :: forall m. (MonadIO m) => FilePath -> Handle m
 mkLogger fn =
   Handle
     { _logDebug = liftIO . log' fn Debug

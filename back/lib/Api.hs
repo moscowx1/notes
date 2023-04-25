@@ -14,15 +14,17 @@ module Api (
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
+import DataAccess.Data (Note)
 import Dto.Auth (LoginReq, RegisterReq)
+import Dto.Note (GetNoteReq, CreateNoteReq)
 import Servant.API (
   Header,
   Headers,
   JSON,
   NamedRoutes,
   NoContent,
-  PlainText,
   Post,
+  PostNoContent,
   ReqBody,
   (:-),
   (:>),
@@ -51,23 +53,25 @@ data Auth routes = Auth
   { _register ::
       routes
         :- "register"
-          :> ReqBody '[JSON] RegisterReq
-          :> Post '[JSON] JwtHeader
+        :> ReqBody '[JSON] RegisterReq
+        :> Post '[JSON] JwtHeader
   , _signIn ::
       routes
         :- "sign-in"
-          :> ReqBody '[JSON] LoginReq
-          :> Post '[JSON] JwtHeader
+        :> ReqBody '[JSON] LoginReq
+        :> Post '[JSON] JwtHeader
   }
   deriving (Generic)
 
 data Notes routes = Notes
   { _get ::
       routes
-        :- Post '[PlainText] String -- TODO: change method
+        :- ReqBody '[JSON] GetNoteReq
+        :> Post '[JSON] Note
   , _create ::
       routes
-        :- Post '[PlainText] String
+        :- ReqBody '[JSON] CreateNoteReq
+        :> PostNoContent
   }
   deriving (Generic)
 
@@ -76,7 +80,7 @@ data Api routes = Api
   , _notes ::
       routes
         :- SA.Auth '[Cookie] Payload
-          :> "notes"
-          :> NamedRoutes Notes
+        :> "notes"
+        :> NamedRoutes Notes
   }
   deriving (Generic)

@@ -9,17 +9,13 @@ module Logic.Notes where
 
 import Api (Payload (..))
 import Control.Monad (void)
-import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
 import DataAccess.Data (Login, Note (..), NoteId, UserId)
 import Database.Esqueleto.Experimental (toSqlKey)
+import Dto.Note (GetNoteReq (..), CreateNoteReq)
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
-
-type CreateNoteReq = Text
-
-newtype GetNoteReq = GetNoteReq {_id :: Int64}
 
 data Error
   = InvalidContent
@@ -83,12 +79,12 @@ create h p req = do
   let note = Note{..}
   createNote h note
 
-getNote ::
+getNote' ::
   (Monad m) =>
   Handle m ->
   NoteId ->
   m Note
-getNote Handle{..} _id = do
+getNote' Handle{..} _id = do
   _logInfo _logger "getting note from db"
   _getNote _id >>= \case
     Nothing -> do
@@ -96,10 +92,10 @@ getNote Handle{..} _id = do
       _throw NoteNotFound
     Just x -> pure x
 
-get ::
+getNote ::
   (Monad m) =>
   Handle m ->
   GetNoteReq ->
   m Note
-get h req = do
-  getNote h $ toSqlKey (_id req)
+getNote h req = do
+  getNote' h $ toSqlKey (_id req)
