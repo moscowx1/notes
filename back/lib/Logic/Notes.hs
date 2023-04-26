@@ -8,14 +8,14 @@
 module Logic.Notes where
 
 import Api (Payload (..))
-import Control.Monad (void)
 import Data.Text (Text)
 import qualified Data.Text as T
 import DataAccess.Data (Login, Note (..), NoteId, UserId)
 import Database.Esqueleto.Experimental (toSqlKey)
-import Dto.Note (GetNoteReq (..), CreateNoteReq)
+import Dto.Note (CreateNoteReq, GetNoteReq (..))
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
+import Servant (NoContent (NoContent))
 
 data Error
   = InvalidContent
@@ -52,7 +52,7 @@ createNote ::
   m ()
 createNote Handle{..} note = do
   _logInfo _logger "creating note"
-  void $ _createNote note
+  _createNote note
 
 getUser ::
   (Monad m) =>
@@ -72,12 +72,12 @@ create ::
   Handle m ->
   Payload ->
   CreateNoteReq ->
-  m ()
+  m NoContent
 create h p req = do
   noteContent <- validCreateReq h req
   noteAuthor <- getUser h (login p)
   let note = Note{..}
-  createNote h note
+  createNote h note >> pure NoContent
 
 getNote' ::
   (Monad m) =>

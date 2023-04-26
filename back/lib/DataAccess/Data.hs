@@ -12,6 +12,7 @@
 
 module DataAccess.Data where
 
+import Data.Aeson.TH ( defaultOptions, deriveJSON )
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time (UTCTime)
@@ -43,3 +44,5 @@ Note
   author UserId
   deriving Show
 |]
+
+$(deriveJSON defaultOptions ''Note)

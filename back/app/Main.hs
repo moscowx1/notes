@@ -32,7 +32,7 @@ import Handle.Auth (register, signIn)
 import Control.Monad.Except (ExceptT)
 import Handle.Logger (Handle, mkLogger)
 import Handle.Notes (createNote, getNote)
-import JwtSupport ()
+import JwtSupport
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (
@@ -101,24 +101,25 @@ server jwk conf runer =
           }
       setCookie = acceptLogin cookieSettings jwtSettings
 
-      logger :: forall err. Handle (ExceptT err IO)
+      --logger :: forall err. Handle (ExceptT err IO)
       logger = mkLogger $ _logFile conf
    in genericServeTWithContext
         id
         Api
           { _auth =
               Auth
-                { _signIn = signIn runer logger (_authConfig conf) setCookie
-                , _register = register runer logger (_authConfig conf) setCookie
+                { _signIn = undefined -- signIn runer logger (_authConfig conf) setCookie
+                , _register = undefined -- register runer logger (_authConfig conf) setCookie
                 }
-          , _notes = \pay -> do
-              Notes
-                { _get = getNote runer logger
-                , _create = do
-                    case pay of
-                      Authenticated p -> createNote runer p logger
-                      _ -> undefined
-                      -- createNote runer p logger
-                }
+          , _notes = undefined
+            -- \pay -> do
+            --  Notes
+            --    { _get = getNote runer logger
+            --    , _create = do
+            --        case pay of
+            --          Authenticated p -> undefined -- createNote runer p logger
+            --          _ -> undefined
+            --          -- createNote runer p logger
+            --    }
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

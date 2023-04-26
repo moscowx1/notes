@@ -12,7 +12,7 @@ createNote ::
   (MonadIO m) =>
   Note ->
   SqlPersistT m ()
-createNote note = void (E.insertEntity note)
+createNote = void . E.insertEntity
 
 getNote ::
   (MonadIO m) =>
