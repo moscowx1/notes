@@ -12,7 +12,7 @@
 
 module DataAccess.Data where
 
-import Data.Aeson.TH ( defaultOptions, deriveJSON )
+import Data.Aeson.TH (defaultOptions, deriveJSON)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time (UTCTime)

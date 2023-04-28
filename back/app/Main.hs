@@ -32,7 +32,7 @@ import Handle.Auth (register, signIn)
 import Control.Monad.Except (ExceptT)
 import Handle.Logger (Handle, mkLogger)
 import Handle.Notes (createNote, getNote)
-import JwtSupport()
+import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (

@@ -52,13 +52,13 @@ data Auth routes = Auth
   { _register ::
       routes
         :- "register"
-        :> ReqBody '[JSON] RegisterReq
-        :> Post '[JSON] JwtHeader
+          :> ReqBody '[JSON] RegisterReq
+          :> Post '[JSON] JwtHeader
   , _signIn ::
       routes
         :- "sign-in"
-        :> ReqBody '[JSON] LoginReq
-        :> Post '[JSON] JwtHeader
+          :> ReqBody '[JSON] LoginReq
+          :> Post '[JSON] JwtHeader
   }
   deriving (Generic)
 
@@ -66,11 +66,11 @@ data Notes routes = Notes
   { _get ::
       routes
         :- ReqBody '[JSON] GetNoteReq
-        :> Post '[JSON] Note
+          :> Post '[JSON] Note
   , _create ::
       routes
         :- ReqBody '[JSON] CreateNoteReq
-        :> Post '[JSON] Note
+          :> Post '[JSON] Note
   }
   deriving (Generic)
 
@@ -79,7 +79,7 @@ data Api routes = Api
   , _notes ::
       routes
         :- SA.Auth '[Cookie] Payload
-        :> "notes"
-        :> NamedRoutes Notes
+          :> "notes"
+          :> NamedRoutes Notes
   }
   deriving (Generic)
