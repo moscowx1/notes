@@ -61,6 +61,7 @@ tests:
     main: Main.hs
     source-dirs: test
     dependencies:
+      - notes
       - tasty
       - tasty-hunit
       - tasty-quickcheck

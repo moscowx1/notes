@@ -90,6 +90,7 @@ test-suite spec
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      AuthTest
       Paths_notes
   hs-source-dirs:
       test
@@ -99,6 +100,7 @@ test-suite spec
     , base
     , cryptonite
     , mtl
+    , notes
     , postgresql-simple
     , tasty
     , tasty-hunit

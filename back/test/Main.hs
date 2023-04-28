@@ -1,4 +1,9 @@
 module Main where
 
+import Test.Tasty (TestTree, defaultMain, testGroup)
+
 main :: IO ()
-main = putStrLn "Hello"
+main = defaultMain tests
+
+tests :: TestTree
+tests = testGroup "Test" [] -- [TA.tests]
