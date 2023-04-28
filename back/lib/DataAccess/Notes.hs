@@ -2,7 +2,6 @@
 
 module DataAccess.Notes where
 
-import Control.Monad (void)
 import Control.Monad.IO.Class (MonadIO)
 import DataAccess.Data (EntityField (UserLogin), Login, Note, User)
 import Database.Esqueleto.Experimental (SqlPersistT, (==.), (^.))
@@ -11,8 +10,8 @@ import qualified Database.Esqueleto.Experimental as E
 createNote ::
   (MonadIO m) =>
   Note ->
-  SqlPersistT m ()
-createNote = void . E.insertEntity
+  SqlPersistT m Note
+createNote = (E.entityVal <$>) . E.insertEntity
 
 getNote ::
   (MonadIO m) =>

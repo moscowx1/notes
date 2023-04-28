@@ -16,7 +16,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import DataAccess.Data (Note)
 import Dto.Auth (LoginReq, RegisterReq)
-import Dto.Note (GetNoteReq, CreateNoteReq)
+import Dto.Note (CreateNoteReq, GetNoteReq)
 import Servant.API (
   Header,
   Headers,
@@ -24,7 +24,6 @@ import Servant.API (
   NamedRoutes,
   NoContent,
   Post,
-  PostNoContent,
   ReqBody,
   (:-),
   (:>),
@@ -71,7 +70,7 @@ data Notes routes = Notes
   , _create ::
       routes
         :- ReqBody '[JSON] CreateNoteReq
-        :> PostNoContent
+        :> Post '[JSON] Note
   }
   deriving (Generic)
 

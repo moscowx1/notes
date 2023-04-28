@@ -15,7 +15,6 @@ import Database.Esqueleto.Experimental (toSqlKey)
 import Dto.Note (CreateNoteReq, GetNoteReq (..))
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
-import Servant (NoContent (NoContent))
 
 data Error
   = InvalidContent
@@ -23,7 +22,7 @@ data Error
   | UserNotFound
 
 data Handle m = Handle
-  { _createNote :: Note -> m ()
+  { _createNote :: Note -> m Note
   , _getUserId :: Login -> m (Maybe UserId)
   , _getNote :: NoteId -> m (Maybe Note)
   , _logger :: Logger.Handle m
@@ -49,7 +48,7 @@ createNote ::
   (Monad m) =>
   Handle m ->
   Note ->
-  m ()
+  m Note
 createNote Handle{..} note = do
   _logInfo _logger "creating note"
   _createNote note
@@ -72,12 +71,12 @@ create ::
   Handle m ->
   Payload ->
   CreateNoteReq ->
-  m NoContent
+  m Note
 create h p req = do
   noteContent <- validCreateReq h req
   noteAuthor <- getUser h (login p)
   let note = Note{..}
-  createNote h note >> pure NoContent
+  createNote h note
 
 getNote' ::
   (Monad m) =>

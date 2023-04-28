@@ -10,7 +10,7 @@ import Dto.Note (CreateNoteReq, GetNoteReq)
 import qualified Handle.Logger as Logger
 import Logic.Notes (Error (..), Handle (..))
 import qualified Logic.Notes as LN
-import Servant (Handler (Handler), NoContent, ServerError (errReasonPhrase), err400, err404)
+import Servant (Handler (Handler), ServerError (errReasonPhrase), err400, err404)
 import Types (SqlRuner)
 
 handle ::
@@ -46,7 +46,7 @@ createNote ::
   Payload ->
   Logger.Handle (ExceptT Error IO) ->
   CreateNoteReq ->
-  Handler NoContent
+  Handler Note
 createNote runer payload logger = Handler . create'
  where
   h = handle runer logger
