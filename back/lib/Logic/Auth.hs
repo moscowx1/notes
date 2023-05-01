@@ -3,6 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
@@ -13,28 +14,25 @@ module Logic.Auth (
   Handle (..),
   signIn,
   register,
-  JwtHeaderSetter,
+  JwtSetter,
 ) where
 
 import Api (JwtHeader, Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Data.ByteString (ByteString)
+import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
+import Data.Void (Void)
 import DataAccess.Data (HashedPassword, Login, Salt, User (..))
 import Dto.Auth (Credential (..), LoginReq, RegisterReq)
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
 import Servant.API (NoContent (NoContent))
 
-type JwtHeaderSetter m =
-  Payload ->
-  m
-    ( Maybe
-        (NoContent -> JwtHeader)
-    )
+type JwtSetter m a = Payload -> m (Maybe a)
 
 data AuthError
   = InvalidLogin
@@ -44,14 +42,14 @@ data AuthError
   | WrongPassword
   | UserNotFound
 
-data Handle m = Handle
+data Handle m r = Handle
   { _generateSalt :: m Salt
   , _currentTime :: m UTCTime
   , _hashPassword :: Password -> Salt -> HashedPassword
   , _addToDb :: User -> m (Maybe User)
   , _getUser :: Login -> m (Maybe User)
-  , _setCookie :: JwtHeaderSetter m
-  , _throw :: forall a. AuthError -> m a -- TODO: checkout better solution
+  , _authentificate :: JwtSetter m r
+  , _throw :: forall a. AuthError -> m a
   , _logger :: Logger.Handle m
   }
 
@@ -62,7 +60,7 @@ data ValidCred = ValidCred
   , password :: Text
   }
 
-creds :: (Monad m) => Handle m -> Credential -> m ValidCred
+creds :: (Monad m) => Handle m r -> Credential -> m ValidCred
 creds Handle{..} Credential{..} = do
   _logDebug _logger "validating user credentials"
 
@@ -76,19 +74,19 @@ creds Handle{..} Credential{..} = do
 
   pure ValidCred{..}
 
-generateSalt :: (Monad m) => Handle m -> m Salt
+generateSalt :: (Monad m) => Handle m r -> m Salt
 generateSalt Handle{..} = do
   _logInfo _logger "generating salt"
   _generateSalt
 
-getTime :: (Monad m) => Handle m -> m UTCTime
+getTime :: (Monad m) => Handle m r -> m UTCTime
 getTime Handle{..} = do
   _logDebug _logger "getting current time"
   _currentTime
 
 hashPwd ::
   (Monad m) =>
-  Handle m ->
+  Handle m r ->
   Text ->
   Salt ->
   m HashedPassword
@@ -100,7 +98,7 @@ hashPwd Handle{..} pwd salt = do
 
 addToDb ::
   (Monad m) =>
-  Handle m ->
+  Handle m r ->
   User ->
   m User
 addToDb Handle{..} u = do
@@ -111,23 +109,23 @@ addToDb Handle{..} u = do
       _throw LoginAlreadyTaken
     Just x -> pure x
 
-setCookie ::
+authentificate ::
   (Monad m) =>
-  Handle m ->
+  Handle m r ->
   User ->
-  m JwtHeader
-setCookie Handle{..} user = do
+  m r
+authentificate Handle{..} user = do
   _logDebug _logger "setting cookie"
   let payload = Payload{role = UserRole, login = userLogin user}
-  _setCookie payload >>= \case
+  _authentificate payload >>= \case
     Nothing -> _throw ErrorSettingCookie
-    Just c -> pure $ c NoContent
+    Just x -> pure x
 
 register ::
   (Monad m) =>
-  Handle m ->
+  Handle m r ->
   RegisterReq ->
-  m JwtHeader
+  m r
 register h req = do
   ValidCred{..} <- creds h req
   userSalt <- generateSalt h
@@ -135,11 +133,13 @@ register h req = do
   userPassword <- hashPwd h password userSalt
   let userLogin = login
   let user = User{..}
-  addToDb h user >>= setCookie h
+  addToDb h user >>= authentificate h
+
+-- setCookie h
 
 getUser ::
   (Monad m) =>
-  Handle m ->
+  Handle m r ->
   Login ->
   m User
 getUser Handle{..} login = do
@@ -152,9 +152,9 @@ getUser Handle{..} login = do
 
 signIn ::
   (Monad m) =>
-  Handle m ->
+  Handle m r ->
   LoginReq ->
-  m JwtHeader
+  m r
 signIn h@Handle{..} req = do
   ValidCred{..} <- creds h req
   user <- getUser h login
@@ -162,4 +162,6 @@ signIn h@Handle{..} req = do
   when
     (userPassword user /= pwdToCheck)
     (_logError _logger "password did't matched" >> _throw WrongPassword)
-  setCookie h user
+  authentificate h user
+
+-- setCookie h user

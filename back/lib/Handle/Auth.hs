@@ -2,9 +2,12 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Handle.Auth (register, signIn) where
+module Handle.Auth (
+  register,
+  signIn,
+) where
 
-import Api (JwtHeader)
+import Api (JwtHeader, Payload (Payload))
 import Config.Auth (Config (..))
 import Control.Monad.Except (
   ExceptT (..),
@@ -19,33 +22,43 @@ import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
 import Dto.Auth (LoginReq, RegisterReq)
 import qualified Handle.Logger as Logger
-import Logic.Auth (AuthError (..), JwtHeaderSetter)
+import Logic.Auth (AuthError (..), JwtSetter)
 import qualified Logic.Auth as LA
-import Servant (Handler (Handler), ServerError (errReasonPhrase), err400, err401, err409, err500)
+import Servant (
+  Handler (Handler),
+  NoContent (NoContent),
+  ServerError (errReasonPhrase),
+  err400,
+  err401,
+  err409,
+  err500,
+ )
 import Types (SqlRuner)
 
 handle ::
   SqlRuner ->
   Logger.Handle (ExceptT AuthError IO) ->
   Config ->
-  LA.JwtHeaderSetter IO ->
-  LA.Handle (ExceptT AuthError IO)
+  (Payload -> IO (Maybe (NoContent -> JwtHeader))) ->
+  LA.Handle (ExceptT AuthError IO) JwtHeader
 handle sql l Config{..} setCookie =
-  LA.Handle
-    { _generateSalt = liftIO $ getEntropy _saltLength
-    , _currentTime = liftIO getCurrentTime
-    , _hashPassword =
-        fastPBKDF2_SHA512 $
-          Parameters
-            { iterCounts = _generatingIterCount
-            , outputLength = _hashedPasswordLength
-            }
-    , _addToDb = lift . sql . addUser
-    , _getUser = lift . sql . userByLogin
-    , _setCookie = liftIO . setCookie
-    , _throw = throwError
-    , _logger = l
-    }
+  let z :: Payload -> IO (Maybe JwtHeader)
+      z p = ((\f -> f NoContent) <$>) <$> setCookie p
+   in LA.Handle
+        { _generateSalt = liftIO $ getEntropy _saltLength
+        , _currentTime = liftIO getCurrentTime
+        , _hashPassword =
+            fastPBKDF2_SHA512 $
+              Parameters
+                { iterCounts = _generatingIterCount
+                , outputLength = _hashedPasswordLength
+                }
+        , _addToDb = lift . sql . addUser
+        , _getUser = lift . sql . userByLogin
+        , _authentificate = liftIO . z
+        , _throw = throwError
+        , _logger = l
+        }
 
 withPhrase :: ServerError -> String -> ServerError
 withPhrase err phrase = err{errReasonPhrase = phrase}
@@ -65,7 +78,7 @@ signIn ::
   SqlRuner ->
   Logger.Handle (ExceptT AuthError IO) ->
   Config ->
-  JwtHeaderSetter IO ->
+  (Payload -> IO (Maybe (NoContent -> JwtHeader))) ->
   LoginReq ->
   Handler JwtHeader
 signIn r l c jwtSet = Handler . reg'
@@ -77,7 +90,7 @@ register ::
   SqlRuner ->
   Logger.Handle (ExceptT AuthError IO) ->
   Config ->
-  JwtHeaderSetter IO ->
+  (Payload -> IO (Maybe (NoContent -> JwtHeader))) ->
   RegisterReq ->
   Handler JwtHeader
 register r l c jwtSet = Handler . reg'
