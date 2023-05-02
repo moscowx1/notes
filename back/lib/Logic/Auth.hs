@@ -17,20 +17,17 @@ module Logic.Auth (
   JwtSetter,
 ) where
 
-import Api (JwtHeader, Payload (..), Role (UserRole))
+import Api (Payload (..), Role (UserRole))
 import Control.Monad (when)
 import Data.ByteString (ByteString)
-import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
-import Data.Void (Void)
 import DataAccess.Data (HashedPassword, Login, Salt, User (..))
 import Dto.Auth (Credential (..), LoginReq, RegisterReq)
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
-import Servant.API (NoContent (NoContent))
 
 type JwtSetter m a = Payload -> m (Maybe a)
 
@@ -41,6 +38,7 @@ data AuthError
   | ErrorSettingCookie
   | WrongPassword
   | UserNotFound
+  deriving (Show, Eq)
 
 data Handle m r = Handle
   { _generateSalt :: m Salt
@@ -105,7 +103,7 @@ addToDb Handle{..} u = do
   _logInfo _logger "adding user to database"
   _addToDb u >>= \case
     Nothing -> do
-      _logError _logger "login alrady taken"
+      _logError _logger "login already taken"
       _throw LoginAlreadyTaken
     Just x -> pure x
 
@@ -135,8 +133,6 @@ register h req = do
   let user = User{..}
   addToDb h user >>= authentificate h
 
--- setCookie h
-
 getUser ::
   (Monad m) =>
   Handle m r ->
@@ -163,5 +159,3 @@ signIn h@Handle{..} req = do
     (userPassword user /= pwdToCheck)
     (_logError _logger "password did't matched" >> _throw WrongPassword)
   authentificate h user
-
--- setCookie h user

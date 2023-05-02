@@ -7,7 +7,7 @@ module Handle.Auth (
   signIn,
 ) where
 
-import Api (JwtHeader, Payload (Payload))
+import Api (JwtHeader, Payload)
 import Config.Auth (Config (..))
 import Control.Monad.Except (
   ExceptT (..),
@@ -22,7 +22,7 @@ import Data.Time (getCurrentTime)
 import DataAccess.Auth (addUser, userByLogin)
 import Dto.Auth (LoginReq, RegisterReq)
 import qualified Handle.Logger as Logger
-import Logic.Auth (AuthError (..), JwtSetter)
+import Logic.Auth (AuthError (..))
 import qualified Logic.Auth as LA
 import Servant (
   Handler (Handler),
@@ -42,8 +42,8 @@ handle ::
   (Payload -> IO (Maybe (NoContent -> JwtHeader))) ->
   LA.Handle (ExceptT AuthError IO) JwtHeader
 handle sql l Config{..} setCookie =
-  let z :: Payload -> IO (Maybe JwtHeader)
-      z p = ((\f -> f NoContent) <$>) <$> setCookie p
+  let auth :: Payload -> IO (Maybe JwtHeader)
+      auth p = ((\f -> f NoContent) <$>) <$> setCookie p
    in LA.Handle
         { _generateSalt = liftIO $ getEntropy _saltLength
         , _currentTime = liftIO getCurrentTime
@@ -55,7 +55,7 @@ handle sql l Config{..} setCookie =
                 }
         , _addToDb = lift . sql . addUser
         , _getUser = lift . sql . userByLogin
-        , _authentificate = liftIO . z
+        , _authentificate = liftIO . auth
         , _throw = throwError
         , _logger = l
         }
