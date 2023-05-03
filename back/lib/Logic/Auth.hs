@@ -37,7 +37,7 @@ data AuthError
   | LoginAlreadyTaken
   | ErrorSettingCookie
   | WrongPassword
-  | UserNotFound
+  | WrongLogin
   deriving (Show, Eq)
 
 data Handle m r = Handle
@@ -143,7 +143,7 @@ getUser Handle{..} login = do
   _getUser login >>= \case
     Nothing -> do
       _logError _logger $ "user with login '" <> login <> "' not found"
-      _throw UserNotFound
+      _throw WrongLogin
     Just x -> pure x
 
 signIn ::

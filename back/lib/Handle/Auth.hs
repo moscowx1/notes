@@ -70,7 +70,7 @@ mapper a = case a of
   LoginAlreadyTaken -> withPhrase err409 "login already taken"
   ErrorSettingCookie -> err500
   WrongPassword -> e400
-  UserNotFound -> e400
+  WrongLogin -> e400
  where
   e400 = withPhrase err400 "login or password didn`t matched"
 
