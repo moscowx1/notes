@@ -7,4 +7,4 @@ main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Test" [AT.tests] -- [TA.tests]
+tests = testGroup "Test" [AT.loginTests, AT.registerTests] -- [TA.tests]
