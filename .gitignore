@@ -2,6 +2,7 @@
 dist-newstyle/
 back/logs.txt
 
+back/migration/liquibase.properties
 config.json
 jwk.json
 
