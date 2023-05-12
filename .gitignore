@@ -7,17 +7,3 @@ config.json
 jwk.json
 
 # front
-output
-generated-docs
-bower_components
-node_modules
-
-package-lock.json
-*.lock
-
-dist/
-prod/*
-.spago
-.parcel-cache/
-.psci_modules/
-.psc-ide-port
