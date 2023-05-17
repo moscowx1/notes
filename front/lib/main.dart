@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:front/api/api.dart';
+import 'package:front/api/login_req.dart';
+import 'package:front/utils/validators.dart';
+import 'globals.dart' as globals;
 
-void main() => runApp(const MyApp());
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -9,8 +16,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const appTitle = 'Form Validation Demo';
-    var m = ListView();
-
     return MaterialApp(
       title: appTitle,
       theme: ThemeData(
@@ -20,111 +25,91 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text(appTitle),
         ),
-        body: const MyCustomForm(),
+        body: const AuthForm(),
       ),
     );
   }
 }
 
-// Create a Form widget.
-class MyCustomForm extends StatefulWidget {
-  const MyCustomForm({super.key});
+class AuthForm extends StatefulWidget {
+  const AuthForm({super.key});
 
   @override
-  MyCustomFormState createState() {
-    return MyCustomFormState();
+  AuthFormState createState() {
+    return AuthFormState();
   }
 }
 
-// Create a corresponding State class.
-// This class holds data related to the form.
-class MyCustomFormState extends State<MyCustomForm> {
-  // Create a global key that uniquely identifies the Form widget
-  // and allows validation of the form.
-  //
-  // Note: This is a GlobalKey<FormState>,
-  // not a GlobalKey<MyCustomFormState>.
-  final _formKey = GlobalKey<FormState>();
+class AuthFormState extends State<AuthForm> {
+  late final GlobalKey<FormBuilderState> _formKey;
+  static const login = 'login';
+  static const password = 'password';
+  bool submitted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _formKey = GlobalKey<FormBuilderState>();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Build a Form widget using the _formKey created above.
     return Center(
-      child: Container(
-        constraints: BoxConstraints.loose(const Size(500, 500)),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'login',
-                  hintText: 'Enter login',
-                ),
-                maxLength: 20,
-                // The validator receives the text that the user has entered.
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter login';
-                  }
+        child: Container(
+      constraints: BoxConstraints.loose(const Size(500, 500)),
+      child: FormBuilder(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+             MaterialButton(
+                child: const Text('Submit'),
+                onPressed: () {
+                  setState(() {
+                    submitted = true;
+                  });
 
-                  if (value.length < 5 ) {
-                    return 'length of login must be at least 5';
+                  var m = _formKey.currentState?.validate();
+                  if (_formKey.currentState?.validate() ?? false) {
+                    print(m);
+                    print('ok');
                   }
+                }),
+            FormBuilderTextField(
+                name: login,
+                maxLength: 15,
+                decoration: const InputDecoration(labelText: 'login'),
+                validator: Validators.composeWithSubmited(submitted, [
+                  FormBuilderValidators.minLength(5),
+                  Validators.dontStartEndWith(' '),
+                ])),
+            FormBuilderTextField(
+              name: password,
+              maxLength: 20,
+              autocorrect: false,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'password'),
+              validator: Validators.composeWithSubmited(
+                  submitted, [FormBuilderValidators.minLength(5)]),
+            ),
+            MaterialButton(
+                child: const Text('Submit'),
+                onPressed: () {
+                  setState(() {
+                    submitted = true;
+                   });
 
-                  if (value.startsWith(' ') || value.endsWith(' ')) {
-                    return 'the login must not start or end with a space';
+                  var m = _formKey.currentState?.validate();
+                  if (_formKey.currentState?.validate() ?? false) {
+                    print(m);
+                    print('ok');
                   }
-                  
-                  return null;
-                },
-              ),
-              TextFormField(
-                obscureText: true,
-                enableSuggestions: false,
-                autocorrect: false,
-                maxLength: 20,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter password';
-                  }
-
-                  if (value.length < 5 ) {
-                    return 'length of password must be at least 5';
-                  }
-
-                  if (value.startsWith(' ') || value.endsWith(' ')) {
-                    return 'the password must not start or end with a space';
-                  }
-                  
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  labelText: 'password',
-                )
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Validate returns true if the form is valid, or false otherwise.
-                    if (_formKey.currentState!.validate()) {
-                      // If the form is valid, display a snackbar. In the real world,
-                      // you'd often call a server or save the information in a database.
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Processing Data')),
-                      );
-                    }
-                  },
-                  child: const Text('Submit'),
-                ),
-              ),
-            ],
-          ),
+                })
+          ],
         ),
       ),
-    );
+    ));
   }
 }
