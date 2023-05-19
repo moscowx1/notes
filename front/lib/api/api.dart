@@ -1,4 +1,4 @@
-import 'package:front/api/login_req.dart';
+import 'package:front/api/auth_data.dart';
 import 'package:front/config/config.dart';
 import 'package:http/browser_client.dart';
 import 'package:http/http.dart' as http;
@@ -23,7 +23,7 @@ class Api {
         path: path);
   }
 
-  login(LoginReq req) async {
+  login(AuthData req) async {
     try {
       var uri = _buildUri('/auth/sign-in');
       var headers = <String, String>{"Content-Type": "application/json"};
