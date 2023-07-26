@@ -21,9 +21,7 @@ import Cors (corsMiddleware)
 import Crypto.JOSE (JWK)
 import Data.Aeson (decodeFileStrict, eitherDecodeFileStrict)
 import Data.Text.Encoding (encodeUtf8)
-import DataAccess.Data (migrateAll)
 import Database.Persist.Postgresql (
-  runMigration,
   runSqlPool,
   withPostgresqlPool,
  )
@@ -32,7 +30,6 @@ import Handle.Auth (register, signIn)
 import Control.Monad.Except (ExceptT)
 import Handle.Logger (Handle, mkLogger)
 import Handle.Notes (createNote, getNote)
-import JwtSupport ()
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (
@@ -59,12 +56,12 @@ main = do
     eitherDecodeFileStrict "config.json" >>= \case
       Left e -> error e
       Right x -> pure x
+  print c
   jwk <-
     decodeFileStrict "jwk.json" >>= \case
       Nothing -> error "error reading jwk"
       Just x -> pure x
   getPool c \pool -> do
-    runSqlPool (runMigration migrateAll) pool
     runServer jwk c pool
  where
   getPool Config{..} =

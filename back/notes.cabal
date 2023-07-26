@@ -58,7 +58,6 @@ executable notes
   main-is: Main.hs
   other-modules:
       Cors
-      JwtSupport
       Paths_notes
   hs-source-dirs:
       app

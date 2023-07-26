@@ -6,5 +6,6 @@
     "generatingIterCount" : 0,
     "hashedPasswordLength" : 0,
     "saltLength" : 0
-  }
+  },
+  "logFile": ""
 }

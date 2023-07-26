@@ -1,0 +1,2 @@
+2023-06-29 13:05:26.866456132 UTC Debug validating user credentials
+2023-06-29 13:05:26.868885187 UTC Error invalid user password

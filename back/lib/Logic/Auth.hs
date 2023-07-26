@@ -63,11 +63,11 @@ creds Handle{..} Credential{..} = do
   _logDebug _logger "validating user credentials"
 
   when
-    (T.length login <= 3)
+    (T.length login < 5)
     (_logError _logger "invalid user login" >> _throw InvalidLogin)
 
   when
-    (T.length password <= 5)
+    (T.length password < 5)
     (_logError _logger "invalid user password" >> _throw InvalidPassword)
 
   pure ValidCred{..}
