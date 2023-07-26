@@ -7,3 +7,4 @@ config.json
 jwk.json
 
 # front
+node_modules/
