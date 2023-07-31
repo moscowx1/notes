@@ -10,7 +10,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!currentUser) navigate(paths.login);
-  }, [currentUser]);
+  }, [currentUser, navigate]);
 
   return (
     <>

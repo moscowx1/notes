@@ -10,7 +10,7 @@ import { requestBase } from "../../services/request";
 loginFx.use(async (data) => {
   return requestBase(
     "auth/sign-in",
-    "POST"
+    "POST",
   )(data).then((r) => {
     if (!r.ok) throw new Error("not success status code");
     return r.json();
@@ -20,7 +20,7 @@ loginFx.use(async (data) => {
 registerFx.use(async (data) => {
   return requestBase(
     "auth/register",
-    "POST"
+    "POST",
   )(data).then((r) => {
     if (!r.ok) throw new Error("not success status code");
     return r.json();

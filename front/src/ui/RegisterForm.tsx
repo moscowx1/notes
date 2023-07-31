@@ -106,7 +106,7 @@ const RegisterForm = () => {
             disabled={pending || !eachValid}
             sx={{ mt: 3, mb: 2 }}
           >
-            Sign In
+            Sign Up
           </Button>
           {!!error && <Alert severity="error">error register</Alert>}
           <Link href={paths.login} variant="body2">
