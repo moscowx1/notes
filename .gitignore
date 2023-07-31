@@ -1,6 +1,9 @@
+# ide
+.vscode/
+
 # back
 dist-newstyle/
-back/logs.txt
+back/log.txt
 
 back/migration/liquibase.properties
 config.json
@@ -8,3 +11,4 @@ jwk.json
 
 # front
 node_modules/
+back/log.txt
