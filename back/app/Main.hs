@@ -117,5 +117,9 @@ server jwk conf runer =
                         Authenticated p -> createNote runer p logger
                         _ -> const $ throwError err401
                   }
+          , _session =  \case
+              Authenticated p -> pure p
+              _ -> throwError err401
+
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

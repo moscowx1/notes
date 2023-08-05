@@ -1,5 +1,11 @@
 import { Component } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ApiService } from 'src/services/api.service';
+
+type LoginForm = {
+  login: FormControl<string>;
+  password: FormControl<string>;
+};
 
 @Component({
   selector: 'app-login-form',
@@ -7,12 +13,32 @@ import { FormControl, FormGroup } from '@angular/forms';
   styleUrls: ['./login-form.component.scss'],
 })
 export class LoginFormComponent {
-  loginForm: FormGroup;
+  onSubmit() {
+    if (!this.loginForm.valid) return;
 
-  constructor() {
-    this.loginForm = new FormGroup({
-      login: new FormControl(null),
-      password: new FormControl(null),
+    const login = this.loginForm.controls['login'].value;
+    const password = this.loginForm.controls['password'].value;
+
+    this.api.login({ login, password }).subscribe({
+      next: () => {
+        this.api.session().subscribe((d) => {
+          console.log(d);
+        });
+      },
+    });
+  }
+  loginForm: FormGroup<LoginForm>;
+
+  constructor(private api: ApiService) {
+    const validators = [
+      Validators.required,
+      Validators.minLength(5),
+      Validators.maxLength(30),
+    ];
+
+    this.loginForm = new FormGroup<LoginForm>({
+      login: new FormControl('', { nonNullable: true, validators }),
+      password: new FormControl('', { nonNullable: true, validators }),
     });
   }
 }

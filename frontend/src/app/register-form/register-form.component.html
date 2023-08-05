@@ -1,0 +1,36 @@
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+  <mat-form-field>
+    <mat-label>Login:</mat-label>
+    <input matInput formControlName="login" />
+    <mat-error *ngIf="registerForm.controls['login'].errors?.['required']"
+      >Login is required</mat-error
+    >
+    <mat-error *ngIf="registerForm.controls['login'].errors?.['minlength']"
+      >Login length must be more than 5</mat-error
+    >
+    <mat-error *ngIf="registerForm.controls['login'].errors?.['maxlength']"
+      >Login length must be less than 30</mat-error
+    >
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Password</mat-label>
+    <input matInput formControlName="password" type="password" />
+    <mat-error *ngIf="registerForm.controls['password'].errors?.['required']"
+      >Password is required</mat-error
+    >
+    <mat-error *ngIf="registerForm.controls['password'].errors?.['minlength']"
+      >Password length must be more than 5</mat-error
+    >
+    <mat-error *ngIf="registerForm.controls['password'].errors?.['maxlength']"
+      >Password length must be less than 30</mat-error
+    >
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Repassword</mat-label>
+    <input matInput formControlName="repassword" type="password" />
+    <mat-error *ngIf="registerForm.errors?.['mismatch']">
+      Passwords should match
+    </mat-error>
+  </mat-form-field>
+  <button mat-button color="primary">Register</button>
+</form>

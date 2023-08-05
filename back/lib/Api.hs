@@ -81,5 +81,10 @@ data Api routes = Api
         :- SA.Auth '[Cookie] Payload
           :> "notes"
           :> NamedRoutes Notes
+  , _session ::
+      routes
+        :- SA.Auth '[Cookie] Payload
+        :> "session"
+        :> Post '[JSON] Payload
   }
   deriving (Generic)

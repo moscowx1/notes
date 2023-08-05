@@ -1,21 +1,29 @@
-<form [formGroup]="loginForm" (ngSubmit)="onSubmit(myForm)">
-  <div>
-    <label>
-      Name:
-      <input formControlName="name" placeholder="Your name" />
-    </label>
-  </div>
-  <div>
-    <label>
-      Email:
-      <input formControlName="email" placeholder="Your email" />
-    </label>
-  </div>
-  <div>
-    <label>
-      Message:
-      <input formControlName="message" placeholder="Your message" />
-    </label>
-  </div>
-  <button type="submit">Send</button>
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+  <mat-form-field>
+    <mat-label>Login:</mat-label>
+    <input matInput formControlName="login" />
+    <mat-error *ngIf="loginForm.controls['login'].errors?.['required']"
+      >Login is required</mat-error
+    >
+    <mat-error *ngIf="loginForm.controls['login'].errors?.['minlength']"
+      >Login length must be more than 5</mat-error
+    >
+    <mat-error *ngIf="loginForm.controls['login'].errors?.['maxlength']"
+      >Login length must be less than 30</mat-error
+    >
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Password</mat-label>
+    <input matInput formControlName="password" type="password" />
+    <mat-error *ngIf="loginForm.controls['password'].errors?.['required']"
+      >Password is required</mat-error
+    >
+    <mat-error *ngIf="loginForm.controls['password'].errors?.['minlength']"
+      >Password length must be more than 5</mat-error
+    >
+    <mat-error *ngIf="loginForm.controls['password'].errors?.['maxlength']"
+      >Password length must be less than 30</mat-error
+    >
+  </mat-form-field>
+  <button mat-button color="primary">Login</button>
 </form>
