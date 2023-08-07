@@ -32,5 +32,12 @@
       Passwords should match
     </mat-error>
   </mat-form-field>
-  <button mat-button color="primary">Register</button>
+  <button
+    mat-button
+    color="primary"
+    type="submit"
+    [disabled]="registerForm.disabled"
+  >
+    Register
+  </button>
 </form>

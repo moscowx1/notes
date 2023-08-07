@@ -1,7 +1,11 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { mergeMap } from 'rxjs';
 import { ApiService } from 'src/services/api.service';
 import { CustomValidators } from 'src/utils/CustomValidators';
+import { login as loginAct } from 'src/state/session.actions';
+import { Store } from '@ngrx/store';
 
 type RegisterForm = {
   login: FormControl<string>;
@@ -15,25 +19,33 @@ type RegisterForm = {
   styleUrls: ['./register-form.component.scss'],
 })
 export class RegisterFormComponent {
+  registerForm: FormGroup<RegisterForm>;
+
   onSubmit() {
     if (!this.registerForm.valid) return;
 
+    this.registerForm.disable();
+
     const login = this.registerForm.controls['login'].value;
     const password = this.registerForm.controls['password'].value;
-    this.apiService.register({ login, password }).subscribe({
-      next: (data) => {
-        console.log(data);
-      },
-      error: (e) => {
-        console.log(e);
-      },
-      complete: () => {
-        console.log(1);
-      },
-    });
+
+    this.apiService
+      .register({ login, password })
+      .pipe(mergeMap(() => this.apiService.session()))
+      .subscribe({
+        next: (session) => {
+          this.store.dispatch(loginAct(session));
+          this.router.navigate(['/']);
+        },
+        error: () => this.registerForm.enable(),
+      });
   }
-  registerForm: FormGroup<RegisterForm>;
-  constructor(private apiService: ApiService) {
+
+  constructor(
+    private apiService: ApiService,
+    private router: Router,
+    private store: Store,
+  ) {
     const validators = [
       Validators.required,
       Validators.minLength(5),

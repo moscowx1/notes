@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { map } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { session } from 'src/model/session';
 
 type Credentials = {
   login: string;
@@ -18,14 +20,24 @@ export class ApiService {
   }
 
   login(body: Credentials) {
-    return this.http.post(`${this.url}/auth/sign-in`, { ...body });
+    return this.http.post(
+      `${this.url}/auth/sign-in`,
+      { ...body },
+      { withCredentials: true },
+    );
   }
 
   register(body: Credentials) {
-    return this.http.post(`${this.url}/auth/register`, { ...body });
+    return this.http.post(
+      `${this.url}/auth/register`,
+      { ...body },
+      { withCredentials: true },
+    );
   }
 
   session() {
-    return this.http.post(`${this.url}/session`, {}, { withCredentials: true });
+    return this.http
+      .post(`${this.url}/session`, {}, { withCredentials: true })
+      .pipe(map((json) => session.parse(json)));
   }
 }

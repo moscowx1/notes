@@ -25,5 +25,12 @@
       >Password length must be less than 30</mat-error
     >
   </mat-form-field>
-  <button mat-button color="primary">Login</button>
+  <button
+    mat-button
+    color="primary"
+    type="submit"
+    [disabled]="loginForm.disabled"
+  >
+    Login
+  </button>
 </form>

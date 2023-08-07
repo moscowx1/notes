@@ -12,6 +12,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http';
 import { RegisterFormComponent } from './register-form/register-form.component';
 import { MainComponent } from './main/main.component';
+import { StoreModule } from '@ngrx/store';
+import { sessionReducer } from 'src/state/session.reducer';
 
 @NgModule({
   declarations: [
@@ -31,6 +33,12 @@ import { MainComponent } from './main/main.component';
     MatInputModule,
     MatButtonModule,
     HttpClientModule,
+    StoreModule.forRoot(
+      {
+        session: sessionReducer,
+      },
+      {},
+    ),
   ],
   providers: [],
   bootstrap: [AppComponent],
