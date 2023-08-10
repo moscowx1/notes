@@ -14,6 +14,7 @@ import { RegisterFormComponent } from './register-form/register-form.component';
 import { MainComponent } from './main/main.component';
 import { StoreModule } from '@ngrx/store';
 import { sessionReducer } from 'src/state/session.reducer';
+import { EffectsModule } from '@ngrx/effects';
 
 @NgModule({
   declarations: [
@@ -33,12 +34,10 @@ import { sessionReducer } from 'src/state/session.reducer';
     MatInputModule,
     MatButtonModule,
     HttpClientModule,
-    StoreModule.forRoot(
-      {
-        session: sessionReducer,
-      },
-      {},
-    ),
+    StoreModule.forRoot({
+      session: sessionReducer,
+    }),
+    EffectsModule.forRoot([]),
   ],
   providers: [],
   bootstrap: [AppComponent],

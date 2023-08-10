@@ -3,8 +3,8 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { mergeMap } from 'rxjs';
-import { ApiService } from 'src/services/api.service';
-import { login as loginAct } from 'src/state/session.actions';
+import { ApiService, Credentials } from 'src/services/api.service';
+import { AuthActions } from 'src/state/auth.actions';
 
 type LoginForm = {
   login: FormControl<string>;
@@ -24,17 +24,13 @@ export class LoginFormComponent {
 
     const login = this.loginForm.controls['login'].value;
     const password = this.loginForm.controls['password'].value;
+    const credentials: Credentials = { login, password };
 
-    this.api
-      .login({ login, password })
-      .pipe(mergeMap(() => this.api.session()))
-      .subscribe({
-        next: (session) => {
-          this.store.dispatch(loginAct(session));
-          this.router.navigate(['/']);
-        },
-        error: () => this.loginForm.enable(),
-      });
+    this.api.login2(credentials).subscribe(
+
+    )
+
+    this.store.dispatch(AuthActions.login({ credentials }));
   }
   loginForm: FormGroup<LoginForm>;
 

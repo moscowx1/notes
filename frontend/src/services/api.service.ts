@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map } from 'rxjs';
+import { map, mergeMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { session } from 'src/model/session';
 
-type Credentials = {
+export type Credentials = {
   login: string;
   password: string;
 };
@@ -27,12 +27,20 @@ export class ApiService {
     );
   }
 
+  login2(body: Credentials) {
+    return this.login(body).pipe(mergeMap(() => this.session()));
+  }
+
   register(body: Credentials) {
     return this.http.post(
       `${this.url}/auth/register`,
       { ...body },
       { withCredentials: true },
     );
+  }
+
+  register2(body: Credentials) {
+    return this.register(body).pipe(mergeMap(() => this.session()));
   }
 
   session() {

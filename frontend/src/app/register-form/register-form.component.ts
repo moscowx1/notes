@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { mergeMap } from 'rxjs';
 import { ApiService } from 'src/services/api.service';
 import { CustomValidators } from 'src/utils/CustomValidators';
-import { login as loginAct } from 'src/state/session.actions';
+import { login as loginAct } from 'src/state/authactions';
 import { Store } from '@ngrx/store';
 
 type RegisterForm = {
