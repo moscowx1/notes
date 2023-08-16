@@ -1,14 +1,10 @@
-import { createActionGroup, props } from '@ngrx/store';
+import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { Session } from 'src/model/session';
-import { Credentials } from 'src/services/api.service';
 
 export const AuthActions = createActionGroup({
-  source: 'Session API',
+  source: 'Auth API',
   events: {
-    login: props<{ credentials: Credentials }>(),
-    register: props<{ credentials: Credentials }>(),
-    sessionSuccess: props<{ session: Session }>(),
-    sessionError: props<{ error: Error }>(),
+    loggedIn: props<{ payload: Session }>(),
+    loggedOut: emptyProps(),
   },
 });
-

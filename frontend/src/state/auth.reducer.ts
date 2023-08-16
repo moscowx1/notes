@@ -3,8 +3,7 @@ import { Session } from 'src/model/session';
 import { AuthActions } from './auth.actions';
 
 export type AuthState =
-  | { type: 'notSet' }
-  | { type: 'error'; error: Error }
+  | { type: 'empty' }
   | { type: 'success'; session: Session };
 
 export type State = {
@@ -12,17 +11,16 @@ export type State = {
 };
 
 export const initialState: State = {
-  session: { type: 'notSet' },
+  session: { type: 'empty' },
 };
 
-export const sessionReducer = createReducer(
+export const authReducer = createReducer(
   initialState,
   on(
-    AuthActions.sessionSuccess,
-    (_, { session }): State => ({ session: { type: 'success', session } }),
+    AuthActions.loggedIn,
+    (_, { payload }): State => ({
+      session: { type: 'success', session: payload },
+    }),
   ),
-  on(
-    AuthActions.sessionError,
-    (_, { error }): State => ({ session: { type: 'error', error } }),
-  ),
+  on(AuthActions.loggedOut, (): State => ({ session: { type: 'empty' } })),
 );

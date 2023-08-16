@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -13,8 +12,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { RegisterFormComponent } from './register-form/register-form.component';
 import { MainComponent } from './main/main.component';
 import { StoreModule } from '@ngrx/store';
-import { sessionReducer } from 'src/state/session.reducer';
 import { EffectsModule } from '@ngrx/effects';
+import { authReducer } from 'src/state/auth.reducer';
 
 @NgModule({
   declarations: [
@@ -35,7 +34,7 @@ import { EffectsModule } from '@ngrx/effects';
     MatButtonModule,
     HttpClientModule,
     StoreModule.forRoot({
-      session: sessionReducer,
+      auth: authReducer,
     }),
     EffectsModule.forRoot([]),
   ],

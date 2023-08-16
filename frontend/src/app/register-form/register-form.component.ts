@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { mergeMap } from 'rxjs';
 import { ApiService } from 'src/services/api.service';
 import { CustomValidators } from 'src/utils/CustomValidators';
-import { login as loginAct } from 'src/state/authactions';
 import { Store } from '@ngrx/store';
+import { AuthActions } from 'src/state/auth.actions';
+import { NavigatorService } from 'src/services/navigator.service';
 
 type RegisterForm = {
   login: FormControl<string>;
@@ -29,21 +28,18 @@ export class RegisterFormComponent {
     const login = this.registerForm.controls['login'].value;
     const password = this.registerForm.controls['password'].value;
 
-    this.apiService
-      .register({ login, password })
-      .pipe(mergeMap(() => this.apiService.session()))
-      .subscribe({
-        next: (session) => {
-          this.store.dispatch(loginAct(session));
-          this.router.navigate(['/']);
-        },
-        error: () => this.registerForm.enable(),
-      });
+    this.apiService.register2({ login, password }).subscribe({
+      next: async (session) => {
+        this.store.dispatch(AuthActions.loggedIn({ payload: session }));
+        await this.navigator.homeRedirect();
+      },
+      error: () => this.registerForm.enable(),
+    });
   }
 
   constructor(
     private apiService: ApiService,
-    private router: Router,
+    private navigator: NavigatorService,
     private store: Store,
   ) {
     const validators = [

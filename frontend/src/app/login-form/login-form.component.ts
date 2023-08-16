@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { mergeMap } from 'rxjs';
 import { ApiService, Credentials } from 'src/services/api.service';
+import { NavigatorService } from 'src/services/navigator.service';
 import { AuthActions } from 'src/state/auth.actions';
 
 type LoginForm = {
@@ -26,17 +25,19 @@ export class LoginFormComponent {
     const password = this.loginForm.controls['password'].value;
     const credentials: Credentials = { login, password };
 
-    this.api.login2(credentials).subscribe(
-
-    )
-
-    this.store.dispatch(AuthActions.login({ credentials }));
+    this.api.login2(credentials).subscribe({
+      next: async (session) => {
+        this.store.dispatch(AuthActions.loggedIn({ payload: session }));
+        await this.navigator.homeRedirect();
+      },
+      error: () => this.loginForm.enable(),
+    });
   }
   loginForm: FormGroup<LoginForm>;
 
   constructor(
     private api: ApiService,
-    private router: Router,
+    private navigator: NavigatorService,
     private store: Store,
   ) {
     const validators = [

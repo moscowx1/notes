@@ -1,7 +1,7 @@
 <p>main works!</p>
 <nav>
   <ul>
-    <li><a routerLink="/login">Login</a></li>
-    <li><a routerLink="/register">Register</a></li>
+    <li><a [routerLink]="this.navigator.login()">Login</a></li>
+    <li><a [routerLink]="this.navigator.register()">Register</a></li>
   </ul>
 </nav>
