@@ -119,7 +119,7 @@ registerTests =
         regTest cred @?= Left InvalidLogin
     , testCase "invalid password" $ do
         let cred = Credential "qwerasdf" ""
-        regTest cred @?= Left InvalidLogin
+        regTest cred @?= Left InvalidPassword
     , testCase "login already exist" $ do
         let cred = Credential "qwerasdf" "asdfasdf"
         let res = evalTestM $ do
