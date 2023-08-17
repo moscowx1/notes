@@ -33,9 +33,7 @@ import { authReducer } from 'src/state/auth.reducer';
     MatInputModule,
     MatButtonModule,
     HttpClientModule,
-    StoreModule.forRoot({
-      auth: authReducer,
-    }),
+    StoreModule.forRoot(authReducer),
     EffectsModule.forRoot([]),
   ],
   providers: [],

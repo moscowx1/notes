@@ -7,6 +7,5 @@ import { NavigatorService } from 'src/services/navigator.service';
   styleUrls: ['./main.component.scss'],
 })
 export class MainComponent {
-  constructor(public navigator: NavigatorService) {
-  }
+  constructor(public navigator: NavigatorService) {}
 }

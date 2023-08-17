@@ -1,4 +1,4 @@
-import { createReducer, on } from '@ngrx/store';
+import { createReducer, createSelector, on } from '@ngrx/store';
 import { Session } from 'src/model/session';
 import { AuthActions } from './auth.actions';
 
@@ -23,4 +23,11 @@ export const authReducer = createReducer(
     }),
   ),
   on(AuthActions.loggedOut, (): State => ({ session: { type: 'empty' } })),
+);
+
+const selectSession = (state: State) => state.session;
+
+export const selectIsAuthentificated = createSelector(
+  selectSession,
+  (auth) => auth.type === 'success',
 );
