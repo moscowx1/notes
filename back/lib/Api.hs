@@ -14,9 +14,10 @@ module Api (
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
-import DataAccess.Data (Note)
+import DataAccess.Data (Note, Tag)
 import Dto.Auth (LoginReq, RegisterReq)
 import Dto.Note (CreateNoteReq, GetNoteReq)
+import Dto.Tag (CreateTagReq, SearchTagsReq)
 import Servant.API (
   Header,
   Headers,
@@ -74,6 +75,17 @@ data Notes routes = Notes
   }
   deriving (Generic)
 
+data Tags routes = Tags
+  { _createTag ::
+      routes
+        :- ReqBody '[JSON] CreateTagReq
+          :> Post '[JSON] Tag
+  , _searchTag ::
+      routes
+        :- ReqBody '[JSON] SearchTagsReq
+          :> Post '[JSON] [Tag]
+  }
+
 data Api routes = Api
   { _auth :: routes :- "auth" :> NamedRoutes Auth
   , _notes ::
@@ -84,7 +96,12 @@ data Api routes = Api
   , _session ::
       routes
         :- SA.Auth '[Cookie] Payload
-        :> "session"
-        :> Post '[JSON] Payload
+          :> "session"
+          :> Post '[JSON] Payload
+  , _tags ::
+      routes
+        :- SA.Auth '[Cookie] Payload
+          :> "tags"
+          :> NamedRoutes Tags
   }
   deriving (Generic)

@@ -43,6 +43,10 @@ Note
   content Text
   author UserId
   deriving Show
+Tag
+  value Text
+  author UserId
+  createdAt UTCTime default=now()
 |]
 
 $(deriveJSON defaultOptions ''Note)

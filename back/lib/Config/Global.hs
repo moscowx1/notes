@@ -16,6 +16,7 @@ data Config = Config
   , _port :: Int
   , _authConfig :: A.Config
   , _logFile :: FilePath
+  , _selectLimit :: Int
   }
   deriving (Show, Eq, Generic)
 

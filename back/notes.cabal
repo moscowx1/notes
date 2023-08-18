@@ -19,13 +19,16 @@ library
       DataAccess.Auth
       DataAccess.Data
       DataAccess.Notes
+      DataAccess.Tags
       Dto.Auth
       Dto.Note
+      Dto.Tag
       Handle.Auth
       Handle.Logger
       Handle.Notes
       Logic.Auth
       Logic.Notes
+      Logic.Tags
       Types
   other-modules:
       Paths_notes

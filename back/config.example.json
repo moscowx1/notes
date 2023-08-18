@@ -7,5 +7,6 @@
     "hashedPasswordLength" : 0,
     "saltLength" : 0
   },
-  "logFile": ""
+  "logFile": "",
+  "selectLimit": 0
 }

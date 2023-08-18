@@ -10,7 +10,7 @@ import Database.Esqueleto.Experimental (SqlPersistT, (==.), (^.))
 import qualified Database.Esqueleto.Experimental as E
 
 addUser ::
-  MonadIO m =>
+  (MonadIO m) =>
   User ->
   SqlPersistT m (Maybe User)
 addUser user = do
@@ -18,7 +18,7 @@ addUser user = do
   pure $ E.entityVal <$> res
 
 userByLogin ::
-  MonadIO m =>
+  (MonadIO m) =>
   Login ->
   SqlPersistT m (Maybe User)
 userByLogin login = do
