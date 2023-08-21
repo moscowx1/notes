@@ -5,6 +5,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedRecordUpdate #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -15,7 +17,8 @@ module Logic.Auth (
   signIn,
   register,
   JwtSetter,
-) where
+)
+where
 
 import Api (Payload (..), Role (UserRole))
 import Control.Monad (when)
@@ -46,7 +49,7 @@ data Handle m r = Handle
   , _hashPassword :: Password -> Salt -> HashedPassword
   , _addToDb :: User -> m (Maybe User)
   , _getUser :: Login -> m (Maybe User)
-  , _authentificate :: JwtSetter m r
+  , _authenticate :: JwtSetter m r
   , _throw :: forall a. AuthError -> m a
   , _logger :: Logger.Handle m
   }
@@ -107,15 +110,15 @@ addToDb Handle{..} u = do
       _throw LoginAlreadyTaken
     Just x -> pure x
 
-authentificate ::
+authenticate ::
   (Monad m) =>
   Handle m r ->
   User ->
   m r
-authentificate Handle{..} user = do
+authenticate Handle{..} user = do
   _logDebug _logger "setting cookie"
   let payload = Payload{role = UserRole, login = userLogin user}
-  _authentificate payload >>= \case
+  _authenticate payload >>= \case
     Nothing -> _throw ErrorSettingCookie
     Just x -> pure x
 
@@ -131,7 +134,7 @@ register h req = do
   userPassword <- hashPwd h password userSalt
   let userLogin = login
   let user = User{..}
-  addToDb h user >>= authentificate h
+  addToDb h user >>= authenticate h
 
 getUser ::
   (Monad m) =>
@@ -158,4 +161,4 @@ signIn h@Handle{..} req = do
   when
     (userPassword user /= pwdToCheck)
     (_logError _logger "password did't matched" >> _throw WrongPassword)
-  authentificate h user
+  authenticate h user

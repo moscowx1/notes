@@ -26,6 +26,7 @@ library
       Handle.Auth
       Handle.Logger
       Handle.Notes
+      Handle.Tags
       Logic.Auth
       Logic.Notes
       Logic.Tags

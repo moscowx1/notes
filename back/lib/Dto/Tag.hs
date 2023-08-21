@@ -1,12 +1,20 @@
-module Dto.Tag where
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
+module Dto.Tag (CreateTagReq (..), SearchTagsReq (..)) where
+
+import Data.Aeson (FromJSON)
+import Data.Int (Int64)
 import Data.Text (Text)
+import GHC.Generics (Generic)
 
 newtype CreateTagReq = CreateTagReq
-  { value :: Text
+  { _value :: Text
   }
+  deriving (Generic, FromJSON)
 
 data SearchTagsReq = SearchTagsReq
-  { maximum :: Int
-  , searchPhrase :: Text
+  { _limit :: Int64
+  , _searchPhrase :: Text
   }
+  deriving (Generic, FromJSON)

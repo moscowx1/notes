@@ -55,7 +55,7 @@ handle sql l Config{..} setCookie =
                 }
         , _addToDb = lift . sql . addUser
         , _getUser = lift . sql . userByLogin
-        , _authentificate = liftIO . auth
+        , _authenticate = liftIO . auth
         , _throw = throwError
         , _logger = l
         }

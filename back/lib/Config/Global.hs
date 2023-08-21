@@ -7,6 +7,7 @@ module Config.Global where
 import qualified Config.Auth as A
 import Data.Aeson (defaultOptions)
 import Data.Aeson.TH (constructorTagModifier, deriveJSON, fieldLabelModifier)
+import Data.Int (Int64)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
@@ -16,7 +17,7 @@ data Config = Config
   , _port :: Int
   , _authConfig :: A.Config
   , _logFile :: FilePath
-  , _selectLimit :: Int
+  , _selectLimit :: Int64
   }
   deriving (Show, Eq, Generic)
 

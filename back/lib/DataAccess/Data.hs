@@ -50,3 +50,4 @@ Tag
 |]
 
 $(deriveJSON defaultOptions ''Note)
+$(deriveJSON defaultOptions ''Tag)

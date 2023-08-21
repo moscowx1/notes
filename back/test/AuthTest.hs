@@ -62,7 +62,7 @@ handle =
     , _hashPassword = const
     , _addToDb = addUser
     , _getUser = getUser
-    , _authentificate = const (pure $ Just ())
+    , _authenticate = const (pure $ Just ())
     , _throw = throwError
     , _logger = logger
     }

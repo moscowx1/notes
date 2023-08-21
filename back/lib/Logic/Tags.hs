@@ -3,28 +3,31 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
+module Logic.Tags (Handle (..), TagError (..), createTag, searchTags) where
+
 import Control.Monad (when)
 import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import DataAccess.Data (Tag (..), UserId)
-import Database.Esqueleto (Value (Value))
-import Dto.Tag (CreateTagReq (CreateTagReq, value), SearchTagsReq (..))
+import DataAccess.Tags (ValidSearchData (..))
+import Dto.Tag (CreateTagReq (..), SearchTagsReq (..))
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
 
 data TagError
   = TagAlreadyExists
-  | TooBigLimitValue
   | InvalidValue
+  | InvalidLimit
 
 data Handle m = Handle
   { _addToDb :: Tag -> m (Maybe Tag)
-  , _search :: Text -> Int64 -> UserId -> m [Tag]
+  , _search :: ValidSearchData -> m [Tag]
   , _currentTime :: m UTCTime
   , _throw :: forall a. TagError -> m a
   , _logger :: Logger.Handle m
+  , _searchLimit :: Int64
   }
 
 addTag ::
@@ -55,18 +58,24 @@ validateTagValue Handle{..} value =
       _throw InvalidValue
     else pure value
 
-data ValidSearchTagReq = ValidSearchTagReq
-  { _limit :: Int
-  , _searchPhrase :: Text
-  }
-
-validateSearch ::
+validateSearchData ::
   (Monad m) =>
   Handle m ->
   SearchTagsReq ->
-  m ValidSearchTagReq
-validateSearch Handle{..} SearchTagsReq{..} = do
-  when (_limit > _)
+  Text ->
+  m ValidSearchData
+validateSearchData h@Handle{..} SearchTagsReq{..} _userLogin = do
+  when (_limit > _searchLimit) (_logError _logger "invalid limit" >> _throw InvalidLimit)
+  validateTagValue h _searchPhrase >> pure ValidSearchData{..}
+
+searchTags' ::
+  (Monad m) =>
+  Handle m ->
+  ValidSearchData ->
+  m [Tag]
+searchTags' Handle{..} searchData = do
+  _logInfo _logger "searching tags"
+  _search searchData
 
 createTag ::
   (Monad m) =>
@@ -75,14 +84,16 @@ createTag ::
   UserId ->
   m Tag
 createTag h@Handle{..} CreateTagReq{..} userId = do
-  _logDebug _logger "validating tag"
-  when (T.length value < 1) (_throw InvalidValue)
-  addTag h value userId
+  _logDebug _logger "validating request"
+  validateTagValue h _value >> addTag h _value userId
 
 searchTags ::
   (Monad m) =>
   Handle m ->
   SearchTagsReq ->
-  UserId ->
-  m Tag
-searchTags h SearchTagsReq{..} userId = undefined
+  Text ->
+  m [Tag]
+searchTags h@Handle{..} req userLogin = do
+  _logDebug _logger "validating request"
+  validData <- validateSearchData h req userLogin
+  searchTags' h validData

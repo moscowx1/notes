@@ -13,7 +13,7 @@
 
 module Main (main) where
 
-import Api (Api (..), Auth (..), Notes (..))
+import Api (Api (..), Auth (..), Notes (..), Tags (..))
 import Config.Global (Config (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))
@@ -120,5 +120,7 @@ server jwk conf runer =
           , _session = \case
               Authenticated p -> pure p
               _ -> throwError err401
+          , -- TODO:
+            _tags = undefined
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

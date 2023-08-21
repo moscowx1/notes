@@ -9,6 +9,7 @@ module Api (
   Notes (..),
   Payload (..),
   Role (..),
+  Tags (..),
   JwtHeader,
 ) where
 
@@ -85,6 +86,7 @@ data Tags routes = Tags
         :- ReqBody '[JSON] SearchTagsReq
           :> Post '[JSON] [Tag]
   }
+  deriving (Generic)
 
 data Api routes = Api
   { _auth :: routes :- "auth" :> NamedRoutes Auth
