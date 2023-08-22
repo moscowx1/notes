@@ -12,18 +12,16 @@ import qualified Database.Esqueleto.Experimental as E
 addUser ::
   (MonadIO m) =>
   User ->
-  SqlPersistT m (Maybe User)
+  SqlPersistT m (Maybe (E.Entity User))
 addUser user = do
-  res <- E.insertUniqueEntity user
-  pure $ E.entityVal <$> res
+  E.insertUniqueEntity user
 
 userByLogin ::
   (MonadIO m) =>
   Login ->
-  SqlPersistT m (Maybe User)
+  SqlPersistT m (Maybe (E.Entity User))
 userByLogin login = do
-  mu <- E.selectOne $ do
+  E.selectOne $ do
     u <- E.from $ E.table @User
     E.where_ (u ^. UserLogin ==. E.val login)
     pure u
-  pure (E.entityVal <$> mu)

@@ -14,6 +14,7 @@ module Api (
 ) where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Int (Int64)
 import Data.Text (Text)
 import DataAccess.Data (Note, Tag)
 import Dto.Auth (LoginReq, RegisterReq)
@@ -39,7 +40,7 @@ import Web.Cookie (SetCookie)
 data Role = UserRole | AdminRole
   deriving (Generic, FromJSON, ToJSON, Show, Eq)
 
-data Payload = Payload {role :: Role, login :: Text}
+data Payload = Payload {role :: Role, login :: Text, userId :: Int64}
   deriving (Generic, FromJSON, ToJSON, ToJWT, FromJWT, Show, Eq)
 
 type JwtHeader =

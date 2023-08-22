@@ -1,0 +1,31 @@
+{
+	"folders": [
+		{
+			"path": "../frontend"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"sqltools.connections": [
+			{
+				"previewLimit": 50,
+				"server": "localhost",
+				"port": 5432,
+				"driver": "PostgreSQL",
+				"name": "notes",
+				"database": "notes",
+				"username": "postgres",
+				"password": "postgres"
+			}
+		],
+		"cSpell.words": [
+			"Aeson",
+			"Creds",
+			"Esqueleto",
+			"ilike",
+			"mconcat"
+		]
+	}
+}

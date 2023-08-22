@@ -28,6 +28,7 @@ import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time (UTCTime)
 import DataAccess.Data (HashedPassword, Login, Salt, User (..))
+import Database.Esqueleto.Experimental (Entity (entityKey, entityVal), fromSqlKey)
 import Dto.Auth (Credential (..), LoginReq, RegisterReq)
 import Handle.Logger (_logDebug, _logError, _logInfo)
 import qualified Handle.Logger as Logger
@@ -47,8 +48,8 @@ data Handle m r = Handle
   { _generateSalt :: m Salt
   , _currentTime :: m UTCTime
   , _hashPassword :: Password -> Salt -> HashedPassword
-  , _addToDb :: User -> m (Maybe User)
-  , _getUser :: Login -> m (Maybe User)
+  , _addToDb :: User -> m (Maybe (Entity User))
+  , _getUser :: Login -> m (Maybe (Entity User))
   , _authenticate :: JwtSetter m r
   , _throw :: forall a. AuthError -> m a
   , _logger :: Logger.Handle m
@@ -101,7 +102,7 @@ addToDb ::
   (Monad m) =>
   Handle m r ->
   User ->
-  m User
+  m (Entity User)
 addToDb Handle{..} u = do
   _logInfo _logger "adding user to database"
   _addToDb u >>= \case
@@ -113,11 +114,16 @@ addToDb Handle{..} u = do
 authenticate ::
   (Monad m) =>
   Handle m r ->
-  User ->
+  Entity User ->
   m r
 authenticate Handle{..} user = do
   _logDebug _logger "setting cookie"
-  let payload = Payload{role = UserRole, login = userLogin user}
+  let payload =
+        Payload
+          { role = UserRole
+          , login = userLogin $ entityVal user
+          , userId = fromSqlKey $ entityKey user
+          }
   _authenticate payload >>= \case
     Nothing -> _throw ErrorSettingCookie
     Just x -> pure x
@@ -140,7 +146,7 @@ getUser ::
   (Monad m) =>
   Handle m r ->
   Login ->
-  m User
+  m (Entity User)
 getUser Handle{..} login = do
   _logInfo _logger "getting user by login"
   _getUser login >>= \case
@@ -156,9 +162,10 @@ signIn ::
   m r
 signIn h@Handle{..} req = do
   ValidCred{..} <- creds h req
-  user <- getUser h login
+  entityUser <- getUser h login
+  let user = entityVal entityUser
   pwdToCheck <- hashPwd h password (userSalt user)
   when
     (userPassword user /= pwdToCheck)
     (_logError _logger "password did't matched" >> _throw WrongPassword)
-  authenticate h user
+  authenticate h entityUser

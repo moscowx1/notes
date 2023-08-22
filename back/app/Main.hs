@@ -13,7 +13,7 @@
 
 module Main (main) where
 
-import Api (Api (..), Auth (..), Notes (..), Tags (..))
+import Api (Api (..), Auth (..), Notes (..))
 import Config.Global (Config (..))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (NoLoggingT (runNoLoggingT))

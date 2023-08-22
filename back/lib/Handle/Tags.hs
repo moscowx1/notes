@@ -6,7 +6,7 @@ import Api (Payload (login))
 import Control.Monad.Except (ExceptT, MonadError (throwError), MonadIO (liftIO), withExceptT)
 import Data.Int (Int64)
 import Data.Time (getCurrentTime)
-import DataAccess.Data (Tag)
+import DataAccess.Data (Tag, UserId)
 import qualified DataAccess.Tags as DataAccess
 import Dto.Tag (CreateTagReq, SearchTagsReq)
 import qualified Handle.Logger as Logger
@@ -37,16 +37,15 @@ mapper InvalidLimit = err400{errReasonPhrase = "invalid limit value"}
 
 createTag ::
   SqlRuner ->
-  Payload ->
   Int64 ->
+  UserId ->
   Logger.Handle (ExceptT TagError IO) ->
   CreateTagReq ->
   Handler Tag
-createTag runner payload limit logger req = Handler create
+createTag runner limit userId logger req = Handler create
  where
   h = handle runner limit logger
-  -- TODO: set id
-  create = withExceptT mapper $ L.createTag h req (login payload)
+  create = withExceptT mapper $ L.createTag h req userId
 
 searchTags ::
   SqlRuner ->

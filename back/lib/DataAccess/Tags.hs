@@ -1,7 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module DataAccess.Tags where
 
@@ -9,7 +9,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Data.Functor ((<&>))
 import Data.Int (Int64)
 import Data.Text (Text)
-import DataAccess.Data (EntityField (TagAuthor, TagValue, UserId, UserLogin), Tag, User (User))
+import DataAccess.Data (EntityField (TagAuthor, TagValue, UserId, UserLogin), Tag, User)
 import Database.Esqueleto.Experimental ((&&.), (:&) ((:&)), (==.), (^.))
 import qualified Database.Esqueleto.Experimental as E
 
@@ -25,10 +25,14 @@ findUserByLogin ::
   (MonadIO m) =>
   Text ->
   E.SqlPersistT m (Maybe User)
-findUserByLogin login = E.selectOne (do
-  u <- E.from $ E.table @User
-  E.where_ (u ^. UserLogin ==. E.val login)
-  pure u) <&> (E.entityVal <$>)
+findUserByLogin login =
+  E.selectOne
+    ( do
+        u <- E.from $ E.table @User
+        E.where_ (u ^. UserLogin ==. E.val login)
+        pure u
+    )
+    <&> (E.entityVal <$>)
 
 data ValidSearchData = ValidSearchData
   { _limit :: Int64

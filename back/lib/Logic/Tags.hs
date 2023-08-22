@@ -85,6 +85,7 @@ createTag ::
   m Tag
 createTag h@Handle{..} CreateTagReq{..} userId = do
   _logDebug _logger "validating request"
+
   validateTagValue h _value >> addTag h _value userId
 
 searchTags ::
