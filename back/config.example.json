@@ -1,8 +1,15 @@
 {
-  "connectionString": "",
-  "poolConnections": 0,
+  "database": {
+    "host": "",
+    "port": 0,
+    "user": "",
+    "password": "",
+    "database": "",
+    "maxConnections": 0,
+    "keepAliveUnusedConnection": 0.0
+  },
   "port": 8080,
-  "authConfig": {
+  "auth": {
     "generatingIterCount" : 0,
     "hashedPasswordLength" : 0,
     "saltLength" : 0

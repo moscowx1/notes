@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Config.Global where
+module Config.Config where
 
 import qualified Config.Auth as A
 import Data.Aeson (defaultOptions)
@@ -15,7 +15,7 @@ data Config = Config
   { _connectionString :: Text
   , _poolConnections :: Int
   , _port :: Int
-  , _authConfig :: A.Config
+  , _auth:: A.Config
   , _logFile :: FilePath
   , _selectLimit :: Int64
   }

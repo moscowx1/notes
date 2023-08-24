@@ -33,14 +33,13 @@ executable:
     - case-insensitive
     - time
     - bytestring
+    - beam-core
+    - beam-postgres
 
 library:
   source-dirs: lib
   dependencies:
     - bytestring
-    - persistent
-    - postgresql-simple
-    - esqueleto
     - text
     - time
     - aeson
@@ -55,6 +54,8 @@ library:
     - monad-logger
     - transformers
     - cookie
+    - beam-core
+    - beam-postgres
 
 tests:
   spec:

@@ -12,25 +12,16 @@ build-type:     Simple
 
 library
   exposed-modules:
-      Api
       Config
       Config.Auth
       Config.Global
-      DataAccess.Auth
-      DataAccess.Data
-      DataAccess.Notes
-      DataAccess.Tags
+      Database.Entities.Note
+      Database.Entities.Tag
+      Database.Entities.User
+      Database.NoteDb
       Dto.Auth
       Dto.Note
       Dto.Tag
-      Handle.Auth
-      Handle.Logger
-      Handle.Notes
-      Handle.Tags
-      Logic.Auth
-      Logic.Notes
-      Logic.Tags
-      Types
   other-modules:
       Paths_notes
   hs-source-dirs:
@@ -39,16 +30,15 @@ library
   build-depends:
       aeson
     , base
+    , beam-core
+    , beam-postgres
     , bytestring
     , cookie
     , cryptonite
-    , esqueleto
     , jose
     , memory
     , monad-logger
     , mtl
-    , persistent
-    , postgresql-simple
     , servant
     , servant-auth
     , servant-auth-server
@@ -61,7 +51,6 @@ library
 executable notes
   main-is: Main.hs
   other-modules:
-      Cors
       Paths_notes
   hs-source-dirs:
       app
@@ -69,6 +58,8 @@ executable notes
   build-depends:
       aeson
     , base
+    , beam-core
+    , beam-postgres
     , bytestring
     , case-insensitive
     , cookie
@@ -93,7 +84,6 @@ test-suite spec
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      AuthTest
       Paths_notes
   hs-source-dirs:
       test
