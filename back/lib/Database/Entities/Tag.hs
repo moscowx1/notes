@@ -7,7 +7,6 @@
 
 module Database.Entities.Tag where
 
-import Data.ByteString (ByteString)
 import Data.Int (Int32)
 import Data.Text (Text)
 import Data.Time (LocalTime)
