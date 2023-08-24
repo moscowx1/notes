@@ -69,6 +69,7 @@ executable notes
     , mtl
     , notes
     , persistent-postgresql
+    , resource-pool
     , servant
     , servant-auth
     , servant-auth-server

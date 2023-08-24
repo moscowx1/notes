@@ -35,6 +35,7 @@ executable:
     - bytestring
     - beam-core
     - beam-postgres
+    - resource-pool
 
 library:
   source-dirs: lib
