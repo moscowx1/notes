@@ -1,12 +1,27 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Main (main) where
 
+import Api (Api (..))
 import qualified Config.Config as GC
 import qualified Config.Database as DC
-import Data.Aeson (eitherDecodeFileStrict)
-import Data.Pool (PoolConfig, defaultPoolConfig, newPool)
+import Cors (corsMiddleware)
+import Crypto.JOSE (JWK)
+import Data.Aeson (decodeFileStrict, eitherDecodeFileStrict)
+import Data.Pool (Pool, PoolConfig, defaultPoolConfig, newPool)
 import Database.Beam.Postgres (ConnectInfo (..), Connection, close, connect)
+import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import Servant (Application, Context (EmptyContext, (:.)))
+import Servant.Auth.Server (
+  CookieSettings (..),
+  IsSecure (Secure),
+  SameSite (SameSiteStrict),
+  defaultCookieSettings,
+  defaultJWTSettings,
+ )
+import Servant.Server.Generic (genericServeTWithContext)
 
 readConfig :: IO GC.Config
 readConfig =
@@ -37,5 +52,36 @@ createPool config =
 main :: IO ()
 main = do
   config <- readConfig
-  _ <- newPool $ createPool config
-  print "end"
+  pool <- newPool $ createPool config
+  jwk <-
+    decodeFileStrict "jwk.json" >>= \case
+      Nothing -> error "error reading jwk"
+      Just x -> pure x
+  let port = GC._port config
+  run port (corsMiddleware . logStdoutDev $ server jwk config pool)
+
+server ::
+  JWK ->
+  GC.Config ->
+  Pool Connection ->
+  Application
+server jwk _ _ =
+  let jwtSettings = defaultJWTSettings jwk
+      cookieSettings =
+        defaultCookieSettings
+          { cookieIsSecure = Secure
+          , cookieSameSite = SameSiteStrict
+          , cookieXsrfSetting = Nothing
+          }
+   in -- TODO: add set cookie
+      -- setCookie = acceptLogin cookieSettings jwtSettings
+
+      -- TODO: add logger
+      -- logger :: forall err. Handle (ExceptT err IO)
+      -- logger = mkLogger $ _logFile conf
+      genericServeTWithContext
+        id
+        Api
+          { _auth = undefined
+          }
+        (jwtSettings :. cookieSettings :. EmptyContext)

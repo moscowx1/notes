@@ -12,6 +12,7 @@ build-type:     Simple
 
 library
   exposed-modules:
+      Api
       Config.Auth
       Config.Config
       Config.Database
@@ -51,6 +52,7 @@ library
 executable notes
   main-is: Main.hs
   other-modules:
+      Cors
       Paths_notes
   hs-source-dirs:
       app
