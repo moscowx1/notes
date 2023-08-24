@@ -3,9 +3,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Config.Database where
+
+import Data.Aeson (defaultOptions)
+import Data.Aeson.TH (constructorTagModifier, deriveJSON, fieldLabelModifier)
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Data.Aeson (Options(fieldLabelModifier, constructorTagModifier))
 
 data Config = Config
   { _host :: Text

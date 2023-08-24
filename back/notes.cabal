@@ -14,7 +14,8 @@ library
   exposed-modules:
       Config
       Config.Auth
-      Config.Global
+      Config.Config
+      Config.Database
       Database.Entities.Note
       Database.Entities.Tag
       Database.Entities.User

@@ -1,14 +1,11 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Main (main) where
 
-import Database.Beam (all_, runSelectReturningList, select)
-import Database.Beam.Postgres (
-  ConnectInfo (..),
-  Connection,
-  connect,
-  runBeamPostgres,
- )
-import Entities.User (NotesDb (..), User, notesDb)
+import Data.Aeson (eitherDecodeFileStrict)
+import Config.Config (Config)
 
+{-
 conInfo :: ConnectInfo
 conInfo =
   ConnectInfo
@@ -18,14 +15,14 @@ conInfo =
     , connectPassword = "postgres"
     , connectDatabase = "notes"
     }
+-}
 
--- q :: Connection -> IO ()
-q :: Connection -> IO [User]
-q c = runBeamPostgres c $ do
-  runSelectReturningList $ select (all_ (_users notesDb))
+readConfig :: IO Config
+readConfig = eitherDecodeFileStrict "config.json" >>= \case
+      Left e -> error e
+      Right x -> pure x
 
 main :: IO ()
 main = do
-  c <- connect conInfo
-  us <- q c
-  print us
+  config <- readConfig
+  print config

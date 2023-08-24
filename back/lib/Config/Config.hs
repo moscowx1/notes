@@ -5,17 +5,16 @@
 module Config.Config where
 
 import qualified Config.Auth as A
+import qualified Config.Database as D
 import Data.Aeson (defaultOptions)
 import Data.Aeson.TH (constructorTagModifier, deriveJSON, fieldLabelModifier)
 import Data.Int (Int64)
-import Data.Text (Text)
 import GHC.Generics (Generic)
 
 data Config = Config
-  { _connectionString :: Text
-  , _poolConnections :: Int
+  { _database :: D.Config
   , _port :: Int
-  , _auth:: A.Config
+  , _auth :: A.Config
   , _logFile :: FilePath
   , _selectLimit :: Int64
   }
