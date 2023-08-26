@@ -23,6 +23,9 @@ library
       Dto.Auth
       Dto.Note
       Dto.Tag
+      Handler.DataAccess.Register
+      Handler.Handler.Register
+      Handler.Logic.Register
   other-modules:
       Paths_notes
   hs-source-dirs:
@@ -40,6 +43,7 @@ library
     , memory
     , monad-logger
     , mtl
+    , resource-pool
     , servant
     , servant-auth
     , servant-auth-server

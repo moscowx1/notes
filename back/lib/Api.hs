@@ -4,7 +4,7 @@
 
 module Api where
 
-import Dto.Auth (RegisterReq)
+import Dto.Auth (Credential)
 import Servant (Header, Headers, JSON, NamedRoutes, NoContent, Post, ReqBody, (:-), (:>))
 import Servant.API.Generic (Generic)
 import Web.Cookie (SetCookie)
@@ -21,7 +21,7 @@ newtype Auth routes = Auth
   { _register ::
       routes
         :- "register"
-          :> ReqBody '[JSON] RegisterReq
+          :> ReqBody '[JSON] Credential
           :> Post '[JSON] JwtHeader
   }
   deriving (Generic)

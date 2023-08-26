@@ -10,7 +10,7 @@ module Database.Entities.User where
 import Data.ByteString (ByteString)
 import Data.Int (Int32)
 import Data.Text (Text)
-import Data.Time (LocalTime)
+import Data.Time (UTCTime)
 import Database.Beam (Beamable, C, Generic, Identity, Table (..))
 
 data UserT f = User
@@ -18,7 +18,7 @@ data UserT f = User
   , _userLogin :: C f Text
   , _userSalt :: C f ByteString
   , _userPassword :: C f ByteString
-  , _userCreatedAt :: C f LocalTime
+  , _userCreatedAt :: C f UTCTime
   }
   deriving (Generic, Beamable)
 

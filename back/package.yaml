@@ -57,6 +57,7 @@ library:
     - cookie
     - beam-core
     - beam-postgres
+    - resource-pool
 
 tests:
   spec:

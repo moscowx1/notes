@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Dto.Auth (LoginReq, RegisterReq, Credential (..)) where
+module Dto.Auth (Credential (..)) where
 
 import Data.Aeson (FromJSON)
 import Data.Text (Text)
@@ -12,6 +12,3 @@ data Credential = Credential
   , password :: Text
   }
   deriving (Generic, FromJSON)
-
-type LoginReq = Credential
-type RegisterReq = Credential
