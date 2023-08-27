@@ -15,14 +15,18 @@ import Database.Beam (Beamable, C, Generic, Identity, Table (..))
 
 data UserT f = User
   { _userId :: C f Int32
-  , _userLogin :: C f Text
-  , _userSalt :: C f ByteString
-  , _userPassword :: C f ByteString
+  , _userLogin :: C f Login
+  , _userSalt :: C f Salt
+  , _userPassword :: C f HashedPassword
   , _userCreatedAt :: C f UTCTime
   }
   deriving (Generic, Beamable)
 
 type User = UserT Identity
+
+type Salt = ByteString
+type HashedPassword = ByteString
+type Login = Text
 
 deriving instance Show User
 

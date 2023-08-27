@@ -1,24 +1,31 @@
 module Handler.Handler.Register where
 
-import Data.Pool (Pool, withResource)
+import qualified Config.Auth as CA
+import qualified Config.Config as CG
+import Control.Monad.Except (ExceptT, MonadError (throwError))
+import Control.Monad.IO.Class (liftIO)
+import Crypto.KDF.PBKDF2 (Parameters (..), fastPBKDF2_SHA512)
+import Crypto.Random.Entropy (getEntropy)
+import Data.Time (getCurrentTime)
 import Database.Beam.Postgres (Connection)
-import Dto.Auth (Credential)
 import Handler.DataAccess.Register (addUser)
-import Handler.Logic.Register (Handle (..))
-import qualified Handler.Logic.Register as L
+import Handler.Types.Register (Handle (..), RegistrationError)
 
 register ::
-  Pool Connection ->
-  Credential ->
-  IO ()
-register pool _ = withResource pool $ \connection ->
-  let handle =
-        Handle
-          { _addUser = addUser
-          , _connection = connection
-          , _throw = undefined
-          , _currentTime = undefined
-          , _hashPassword = undefined
-          , _generateSalt = undefined
-          }
-   in L.register handle undefined
+  Connection ->
+  CG.Config ->
+  Handle (ExceptT RegistrationError IO)
+register connection config =
+  Handle
+    { _addUser = liftIO . addUser connection
+    , _throw = throwError
+    , _connection = connection
+    , _currentTime = liftIO getCurrentTime
+    , _hashPassword =
+        fastPBKDF2_SHA512 $
+          Parameters
+            { iterCounts = CA._generatingIterCount $ CG._auth config
+            , outputLength = CA._hashedPasswordLength $ CG._auth config
+            }
+    , _generateSalt = liftIO $ getEntropy $ CA._saltLength $ CG._auth config
+    }

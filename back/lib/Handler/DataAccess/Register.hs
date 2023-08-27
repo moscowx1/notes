@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Handler.DataAccess.Register where
 
-import Data.Time (UTCTime)
 import Database.Beam (SqlValable (val_), default_, insertExpressions)
 import Database.Beam.Backend.SQL.BeamExtensions (
   BeamHasInsertOnConflict (
@@ -12,30 +12,31 @@ import Database.Beam.Backend.SQL.BeamExtensions (
   ),
   runInsertReturningList,
  )
-import Database.Beam.Postgres (Pg)
+import Database.Beam.Postgres (Connection, runBeamPostgres)
 import Database.Entities.User (User, UserT (..))
 import Database.NoteDb (NotesDb (_users), notesDb)
-import Handler.Logic.Register (HashedPassword, Login, Salt)
+import Handler.Types.Register (CreateUserData (..))
 
-addUser :: UTCTime -> Login -> HashedPassword -> Salt -> Pg (Maybe User)
-addUser createdAt login password salt =
-  runInsertReturningList
-    ( insertOnConflict
-        (_users notesDb)
-        ( insertExpressions
-            [ User
-                { _userId = default_
-                , _userCreatedAt = val_ createdAt
-                , _userLogin = val_ login
-                , _userPassword = val_ password
-                , _userSalt = val_ salt
-                }
-            ]
-        )
-        (conflictingFields _userLogin)
-        onConflictDoNothing
-    )
-    >>= \case
-      [u] -> pure $ Just u
-      [] -> pure Nothing
-      _ -> error "impossible"
+addUser :: Connection -> CreateUserData -> IO (Maybe User)
+addUser connection CreateUserData{..} =
+  runBeamPostgres connection $
+    runInsertReturningList
+      ( insertOnConflict
+          (_users notesDb)
+          ( insertExpressions
+              [ User
+                  { _userId = default_
+                  , _userCreatedAt = val_ _createdAt
+                  , _userLogin = val_ _login
+                  , _userPassword = val_ _hashedPassword
+                  , _userSalt = val_ _salt
+                  }
+              ]
+          )
+          (conflictingFields _userLogin)
+          onConflictDoNothing
+      )
+      >>= \case
+        [u] -> pure $ Just u
+        [] -> pure Nothing
+        _ -> error "impossible"

@@ -26,6 +26,7 @@ library
       Handler.DataAccess.Register
       Handler.Handler.Register
       Handler.Logic.Register
+      Handler.Types.Register
   other-modules:
       Paths_notes
   hs-source-dirs:
