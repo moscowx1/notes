@@ -1,13 +1,23 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Api where
 
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Int (Int32)
+import Database.Entities.User (Login)
 import Dto.Auth (Credential)
 import Servant (Header, Headers, JSON, NamedRoutes, NoContent, Post, ReqBody, (:-), (:>))
 import Servant.API.Generic (Generic)
+import Servant.Auth.JWT (FromJWT, ToJWT)
 import Web.Cookie (SetCookie)
+
+data Payload = Payload {login :: Login, userId :: Int32}
+  deriving (Generic, FromJSON, ToJSON, ToJWT, FromJWT, Show, Eq)
+
+type JwtSetter m a = Payload -> m (Maybe a)
 
 type JwtHeader =
   ( Headers
@@ -20,7 +30,7 @@ type JwtHeader =
 newtype Auth routes = Auth
   { _register ::
       routes
-        :- "register"
+        :- "sign-up"
           :> ReqBody '[JSON] Credential
           :> Post '[JSON] JwtHeader
   }

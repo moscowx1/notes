@@ -4,7 +4,7 @@
 
 module Main (main) where
 
-import Api (Api (..))
+import Api (Api (..), Auth (..))
 import qualified Config.Config as GC
 import qualified Config.Database as DC
 import Cors (corsMiddleware)
@@ -12,6 +12,7 @@ import Crypto.JOSE (JWK)
 import Data.Aeson (decodeFileStrict, eitherDecodeFileStrict)
 import Data.Pool (Pool, PoolConfig, defaultPoolConfig, newPool)
 import Database.Beam.Postgres (ConnectInfo (..), Connection, close, connect)
+import Handler.Handler.Register (register)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Servant (Application, Context (EmptyContext, (:.)))
@@ -19,6 +20,7 @@ import Servant.Auth.Server (
   CookieSettings (..),
   IsSecure (Secure),
   SameSite (SameSiteStrict),
+  acceptLogin,
   defaultCookieSettings,
   defaultJWTSettings,
  )
@@ -66,7 +68,7 @@ server ::
   GC.Config ->
   Pool Connection ->
   Application
-server jwk _ _ =
+server jwk config pool =
   let jwtSettings = defaultJWTSettings jwk
       cookieSettings =
         defaultCookieSettings
@@ -74,15 +76,16 @@ server jwk _ _ =
           , cookieSameSite = SameSiteStrict
           , cookieXsrfSetting = Nothing
           }
-   in -- TODO: add set cookie
-      -- setCookie = acceptLogin cookieSettings jwtSettings
-
-      -- TODO: add logger
+      setCookie = acceptLogin cookieSettings jwtSettings
+   in -- TODO: add logger
       -- logger :: forall err. Handle (ExceptT err IO)
       -- logger = mkLogger $ _logFile conf
       genericServeTWithContext
         id
         Api
-          { _auth = undefined
+          { _auth =
+              Auth
+                { _register = register pool setCookie config
+                }
           }
         (jwtSettings :. cookieSettings :. EmptyContext)

@@ -1,16 +1,16 @@
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Handler.Types.Register where
 
+import Api (JwtSetter)
 import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
-import Database.Beam.Postgres (Connection)
 import Database.Entities.User (HashedPassword, Login, Salt, User)
 
 data RegistrationError
   = InvalidRequest
   | LoginAlreadyTaken
+  | ErrorSettingCookie
 
 data CreateUserData = CreateUserData
   { _createdAt :: UTCTime
@@ -19,11 +19,11 @@ data CreateUserData = CreateUserData
   , _salt :: Salt
   }
 
-data Handle m = Handle
+data Handle m r = Handle
   { _addUser :: CreateUserData -> m (Maybe User)
   , _throw :: forall a. RegistrationError -> m a
-  , _connection :: Connection
   , _currentTime :: m UTCTime
   , _hashPassword :: ByteString -> Salt -> HashedPassword
   , _generateSalt :: m Salt
+  , _setCookie :: JwtSetter m r
   }
