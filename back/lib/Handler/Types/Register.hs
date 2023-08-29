@@ -11,6 +11,7 @@ data RegistrationError
   = InvalidRequest
   | LoginAlreadyTaken
   | ErrorSettingCookie
+  deriving (Eq, Show)
 
 data CreateUserData = CreateUserData
   { _createdAt :: UTCTime
